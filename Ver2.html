@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>English With Me - Website Học Tiếng Anh</title>
+    <title>English With Me - Website Học Tiếng Anh (v3)</title>
     <!-- Nhúng font Inter từ Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,6 +17,9 @@
             --light-blue-bg: #e0f7fa;
             --dark-text: #333;
             --dark-red: #c62828;
+            /* MỚI: Màu cho tính năng mới */
+            --success-green: #28a745;
+            --success-green-hover: #218838;
         }
 
         body {
@@ -303,7 +306,7 @@
             color: #666;
         }
 
-        /* NEW: General Content Grid (for Cambridge/Global Success) */
+        /* General Content Grid (for Cambridge/Global Success) */
         .content-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -336,8 +339,17 @@
         .content-item .btn {
             margin-top: 15px;
         }
+        
+        /* MỚI: Icon hoàn thành bài học */
+        .completion-icon {
+            color: var(--success-green);
+            font-weight: bold;
+            margin-left: 8px;
+            font-size: 1.2em;
+        }
 
-        /* NEW: Lesson Page Content */
+
+        /* Lesson Page Content */
         .lesson-section {
             margin-bottom: 30px;
             padding-bottom: 20px;
@@ -353,6 +365,24 @@
             list-style-type: disc;
             margin-left: 20px;
             line-height: 1.8;
+        }
+        
+        /* MỚI: Nút hoàn thành bài học */
+        .btn-complete {
+            background-color: var(--success-green);
+            margin-top: 20px;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+        }
+        .btn-complete:hover {
+            background-color: var(--success-green-hover);
+        }
+        .btn-complete.completed,
+        .btn-complete:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.8;
         }
 
         /* 6. Trang Game Ôn Tập */
@@ -571,6 +601,57 @@
             text-align: center;
             font-size: 1.2em;
         }
+        
+        /* MỚI: CSS Khu vực bình luận */
+        .comment-section {
+            margin-top: 40px;
+            border-top: 2px solid #eee;
+            padding-top: 20px;
+        }
+        .comment-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .comment-item {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .comment-item:last-child {
+            border-bottom: none;
+        }
+        .comment-item strong {
+            display: block;
+            font-size: 0.95em;
+            color: var(--primary-color);
+        }
+        .comment-item small {
+            font-size: 0.8em;
+            color: #888;
+            display: block;
+            margin-top: 2px;
+        }
+        .comment-item p {
+            margin: 5px 0 0 0;
+            color: #444;
+        }
+        .comment-form textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+        }
+        .comment-form .auth-message {
+            margin-top: -5px; /* Đặt thông báo lỗi sát lên trên */
+        }
 
         /* Trang Game Flashcard */
         .flashcard-controls {
@@ -651,7 +732,7 @@
         <a id="register-link" href="#" onclick="showPage('register')">Đăng ký</a>
         <!-- Hiển thị khi đã đăng nhập -->
         <a id="profile-link" href="#" onclick="showPage('profile')" style="display: none;">Hồ sơ</a>
-        <a id="logout-link" href="#" style="display: none;">Đăng xuất</a>
+        <a id="logout-link" href="#" onclick="handleLogout(event)" style="display: none;">Đăng xuất</a>
     </div>
 
     <!-- Header (Logo) -->
@@ -811,13 +892,13 @@
                     <div class="game-card">
                         <img src="https://placehold.co/150x150/e0f7fa/000?text=Game+Icon+2" alt="Icon game">
                         <h3>Nối từ (Word Connect)</h3>
-                        <button class="btn" onclick="alert('Chức năng này sắp ra mắt!')">Chơi ngay</button>
+                        <button class="btn" onclick="showCustomAlert('Chức năng này sắp ra mắt!')">Chơi ngay</button>
                     </div>
                     <!-- Game card 3 -->
                     <div class="game-card">
                         <img src="https://placehold.co/150x150/e0f7fa/000?text=Game+Icon+3" alt="Icon game">
                         <h3>Điền vào chỗ trống</h3>
-                        <button class="btn" onclick="alert('Chức năng này sắp ra mắt!')">Chơi ngay</button>
+                        <button class="btn" onclick="showCustomAlert('Chức năng này sắp ra mắt!')">Chơi ngay</button>
                     </div>
                 </div>
             </div>
@@ -919,21 +1000,21 @@
                     <!-- Unit Item 1 -->
                     <div class="content-item">
                         <img src="https://placehold.co/250x150/e0f7fa/000?text=Unit+1:+Our+School" alt="Unit 1">
-                        <h3>Unit 1: Our School</h3>
+                        <h3>Unit 1: Our School <span class="completion-icon" id="icon-cambridge-unit1"></span></h3>
                         <p>Từ vựng về trường học, các môn học và hoạt động.</p>
                         <button class="btn" onclick="showPage('cambridge-unit1', 'cambridge')">Vào học</button>
                     </div>
                     <!-- Unit Item 2 -->
                     <div class="content-item">
                         <img src="https://placehold.co/250x150/e0f7fa/000?text=Unit+2:+Family" alt="Unit 2">
-                        <h3>Unit 2: Family and Friends</h3>
+                        <h3>Unit 2: Family and Friends <span class="completion-icon" id="icon-cambridge-unit2"></span></h3>
                         <p>Từ vựng về gia đình, bạn bè và các mối quan hệ.</p>
                         <button class="btn" onclick="showPage('cambridge-unit2', 'cambridge')">Vào học</button>
                     </div>
                     <!-- Unit Item 3 -->
                     <div class="content-item">
                         <img src="https://placehold.co/250x150/e0f7fa/000?text=Unit+3:+The+World" alt="Unit 3">
-                        <h3>Unit 3: The World Around Us</h3>
+                        <h3>Unit 3: The World Around Us <span class="completion-icon" id="icon-cambridge-unit3"></span></h3>
                         <p>Khám phá thế giới tự nhiên, động vật và môi trường.</p>
                         <button class="btn" onclick="showPage('cambridge-unit3', 'cambridge')">Vào học</button>
                     </div>
@@ -952,21 +1033,21 @@
                     <!-- Unit Item 1 -->
                     <div class="content-item">
                         <img src="https://placehold.co/250x150/e0f7fa/000?text=Unit+1:+Address" alt="Unit 1">
-                        <h3>Unit 1: What's your address?</h3>
+                        <h3>Unit 1: What's your address? <span class="completion-icon" id="icon-globalsuccess-unit1"></span></h3>
                         <p>Học cách hỏi và trả lời về địa chỉ.</p>
                         <button class="btn" onclick="showPage('globalsuccess-unit1', 'globalsuccess')">Vào học</button>
                     </div>
                     <!-- Unit Item 2 -->
                     <div class="content-item">
                         <img src="https://placehold.co/250x150/e0f7fa/000?text=Unit+2:+Daily+Routines" alt="Unit 2">
-                        <h3>Unit 2: I always get up early</h3>
+                        <h3>Unit 2: I always get up early <span class="completion-icon" id="icon-globalsuccess-unit2"></span></h3>
                         <p>Nói về các thói quen và hoạt động hàng ngày.</p>
                         <button class="btn" onclick="showPage('globalsuccess-unit2', 'globalsuccess')">Vào học</button>
                     </div>
                     <!-- Unit Item 3 -->
                     <div class="content-item">
                         <img src="https://placehold.co/250x150/e0f7fa/000?text=Unit+3:+Holiday" alt="Unit 3">
-                        <h3>Unit 3: Where did you go on holiday?</h3>
+                        <h3>Unit 3: Where did you go on holiday? <span class="completion-icon" id="icon-globalsuccess-unit3"></span></h3>
                         <p>Học cách nói về các kỳ nghỉ (Thì quá khứ đơn).</p>
                         <button class="btn" onclick="showPage('globalsuccess-unit3', 'globalsuccess')">Vào học</button>
                     </div>
@@ -984,26 +1065,36 @@
                     <p>UserID: <strong id="profile-userid">...</strong></p>
                 </div>
                 
-                <!-- TÍNH NĂNG MỚI: HIỂN THỊ KẾT QUẢ QUIZ -->
+                <!-- HIỂN THỊ KẾT QUẢ QUIZ -->
                 <div class="lesson-section">
                     <h2>Tiến độ học tập (Bài kiểm tra)</h2>
                     <div id="profile-quiz-results">
                         <p>Chưa có kết quả nào được lưu.</p>
                     </div>
                 </div>
+                
+                <!-- MỚI: HIỂN THỊ TIẾN ĐỘ BÀI HỌC -->
+                <div class="lesson-section">
+                    <h2>Tiến độ bài học (Đã hoàn thành)</h2>
+                    <div id="profile-lesson-progress">
+                        <p>Chưa hoàn thành bài học nào.</p>
+                    </div>
+                </div>
                 <!-- KẾT THÚC TÍNH NĂNG MỚI -->
 
-                <button class="btn btn-back" id="profile-logout-btn">Đăng xuất</button>
+                <button class="btn btn-back" id="profile-logout-btn" onclick="handleLogout(event)">Đăng xuất</button>
             </div>
         </div> <!-- Kết thúc #page-profile -->
         
-        <!-- TRANG BÀI HỌC (MỚI) -->
+        <!-- TRANG BÀI HỌC (CẬP NHẬT VỚI TÍNH NĂNG MỚI) -->
 
         <!-- Cambridge Unit 1 -->
         <div id="page-cambridge-unit1" class="page">
             <div class="subpage-container">
                 <button class="btn btn-back" onclick="showPage('cambridge', 'cambridge')">&larr; Quay lại Cambridge</button>
                 <h1>Cambridge - Unit 1: Our School</h1>
+                
+                <!-- Nội dung bài học -->
                 <div class="lesson-section">
                     <h2>1. Từ vựng (Vocabulary)</h2>
                     <ul>
@@ -1019,6 +1110,22 @@
                     <p>Trả lời: I have + (tên môn học).</p>
                     <p>Ví dụ: I have Maths, Vietnamese, and English.</p>
                 </div>
+                
+                <!-- MỚI: Nút hoàn thành -->
+                <button class="btn btn-complete" onclick="markLessonComplete('cambridge-unit1')">Hoàn thành bài học</button>
+
+                <!-- MỚI: Khu vực bình luận -->
+                <div class="lesson-section comment-section">
+                    <h2>Bình luận</h2>
+                    <div id="comment-list-cambridge-unit1" class="comment-list">
+                        <!-- Comments load here -->
+                    </div>
+                    <form id="comment-form-cambridge-unit1" class="comment-form" onsubmit="event.preventDefault(); postComment('camstring-unit1');">
+                        <textarea id="comment-input-cambridge-unit1" placeholder="Viết bình luận của bạn..." required></textarea>
+                        <button type="submit" class="btn">Gửi</button>
+                    </form>
+                </div>
+                
             </div>
         </div>
         <!-- Cambridge Unit 2 -->
@@ -1027,6 +1134,19 @@
                 <button class="btn btn-back" onclick="showPage('cambridge', 'cambridge')">&larr; Quay lại Cambridge</button>
                 <h1>Cambridge - Unit 2: Family and Friends</h1>
                 <div class="lesson-section"><h2>Nội dung Unit 2...</h2></div>
+                
+                <!-- MỚI: Nút hoàn thành -->
+                <button class="btn btn-complete" onclick="markLessonComplete('cambridge-unit2')">Hoàn thành bài học</button>
+
+                <!-- MỚI: Khu vực bình luận -->
+                <div class="lesson-section comment-section">
+                    <h2>Bình luận</h2>
+                    <div id="comment-list-cambridge-unit2" class="comment-list"></div>
+                    <form id="comment-form-cambridge-unit2" class="comment-form" onsubmit="event.preventDefault(); postComment('cambridge-unit2');">
+                        <textarea id="comment-input-cambridge-unit2" placeholder="Viết bình luận của bạn..." required></textarea>
+                        <button type="submit" class="btn">Gửi</button>
+                    </form>
+                </div>
             </div>
         </div>
         <!-- Cambridge Unit 3 -->
@@ -1035,6 +1155,16 @@
                 <button class="btn btn-back" onclick="showPage('cambridge', 'cambridge')">&larr; Quay lại Cambridge</button>
                 <h1>Cambridge - Unit 3: The World Around Us</h1>
                 <div class="lesson-section"><h2>Nội dung Unit 3...</h2></div>
+                
+                <button class="btn btn-complete" onclick="markLessonComplete('cambridge-unit3')">Hoàn thành bài học</button>
+                <div class="lesson-section comment-section">
+                    <h2>Bình luận</h2>
+                    <div id="comment-list-cambridge-unit3" class="comment-list"></div>
+                    <form id="comment-form-cambridge-unit3" class="comment-form" onsubmit="event.preventDefault(); postComment('cambridge-unit3');">
+                        <textarea id="comment-input-cambridge-unit3" placeholder="Viết bình luận của bạn..." required></textarea>
+                        <button type="submit" class="btn">Gửi</button>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -1058,6 +1188,16 @@
                     <p>Trả lời: It's + (số nhà) + (tên đường).</p>
                     <p>Ví dụ: It's 123 Tran Hung Dao Street.</p>
                 </div>
+                
+                <button class="btn btn-complete" onclick="markLessonComplete('globalsuccess-unit1')">Hoàn thành bài học</button>
+                <div class="lesson-section comment-section">
+                    <h2>Bình luận</h2>
+                    <div id="comment-list-globalsuccess-unit1" class="comment-list"></div>
+                    <form id="comment-form-globalsuccess-unit1" class="comment-form" onsubmit="event.preventDefault(); postComment('globalsuccess-unit1');">
+                        <textarea id="comment-input-globalsuccess-unit1" placeholder="Viết bình luận của bạn..." required></textarea>
+                        <button type="submit" class="btn">Gửi</button>
+                    </form>
+                </div>
             </div>
         </div>
         <!-- Global Success Unit 2 -->
@@ -1066,6 +1206,16 @@
                 <button class="btn btn-back" onclick="showPage('globalsuccess', 'globalsuccess')">&larr; Quay lại Global Success</button>
                 <h1>Global Success - Unit 2: I always get up early</h1>
                 <div class="lesson-section"><h2>Nội dung Unit 2...</h2></div>
+                
+                <button class="btn btn-complete" onclick="markLessonComplete('globalsuccess-unit2')">Hoàn thành bài học</button>
+                <div class="lesson-section comment-section">
+                    <h2>Bình luận</h2>
+                    <div id="comment-list-globalsuccess-unit2" class="comment-list"></div>
+                    <form id="comment-form-globalsuccess-unit2" class="comment-form" onsubmit="event.preventDefault(); postComment('globalsuccess-unit2');">
+                        <textarea id="comment-input-globalsuccess-unit2" placeholder="Viết bình luận của bạn..." required></textarea>
+                        <button type="submit" class="btn">Gửi</button>
+                    </form>
+                </div>
             </div>
         </div>
         <!-- Global Success Unit 3 -->
@@ -1074,6 +1224,16 @@
                 <button class="btn btn-back" onclick="showPage('globalsuccess', 'globalsuccess')">&larr; Quay lại Global Success</button>
                 <h1>Global Success - Unit 3: Where did you go on holiday?</h1>
                 <div class="lesson-section"><h2>Nội dung Unit 3...</h2></div>
+                
+                <button class="btn btn-complete" onclick="markLessonComplete('globalsuccess-unit3')">Hoàn thành bài học</button>
+                <div class="lesson-section comment-section">
+                    <h2>Bình luận</h2>
+                    <div id="comment-list-globalsuccess-unit3" class="comment-list"></div>
+                    <form id="comment-form-globalsuccess-unit3" class="comment-form" onsubmit="event.preventDefault(); postComment('globalsuccess-unit3');">
+                        <textarea id="comment-input-globalsuccess-unit3" placeholder="Viết bình luận của bạn..." required></textarea>
+                        <button type="submit" class="btn">Gửi</button>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -1086,15 +1246,20 @@
     </footer>
 
     <!-- Video Modal Structure -->
-    <!-- CẬP NHẬT: Thay thế <img> bằng <iframe> -->
     <div id="video-modal" class="modal-overlay" style="display: none;" onclick="closeVideoModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <span class="modal-close" onclick="closeVideoModal()">&times;</span>
             <h3 id="modal-video-title">Video Title</h3>
             <div class="video-player-container">
+                <!-- CẬP NHẬT: Thay thế <img> bằng <iframe> -->
                 <iframe id="modal-video-iframe" width="560" height="315" src="" 
                 frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowfullscreen></iframe>
+            </div>
+            <!-- MỚI: Thêm nội dung cho Custom Alert -->
+            <div id="modal-alert-content" style="display: none; text-align: center; padding: 30px 0;">
+                <p id="modal-alert-text" style="font-size: 1.2em;"></p>
+                <button class="btn" onclick="closeVideoModal()" style="margin-top: 20px;">Đã hiểu</button>
             </div>
         </div>
     </div>
@@ -1118,8 +1283,13 @@
             // CẬP NHẬT: Thêm các hàm Firestore
             doc,
             setDoc,
+            getDoc, // MỚI: Để kiểm tra tiến độ
             collection,
-            getDocs
+            getDocs,
+            addDoc, // MỚI: Cho bình luận
+            query, // MỚI: Cho bình luận
+            where, // MỚI: Cho bình luận
+            onSnapshot // MỚI: Cho bình luận real-time
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- 0. KHAI BÁO BIẾN TOÀN CỤC CHO APP ---
@@ -1127,15 +1297,59 @@
         // Biến Firebase
         let app, auth, db;
         let currentUser = null;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+
+        // --- !!! QUAN TRỌNG KHI TRIỂN KHAI LÊN GITHUB PAGES !!! ---
+        // Bạn cần thay thế các giá trị dưới đây bằng thông tin từ dự án Firebase của bạn.
+        
+        // 1. (Tùy chọn) Đặt một ID cho ứng dụng của bạn, ví dụ: 'my-english-app'
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'my-english-app-github';
+
+        // 2. (BẮT BUỘC) Dán đối tượng cấu hình Firebase của bạn vào đây.
+        // Lấy nó từ Cài đặt dự án (Project Settings) > Ứng dụng của bạn (Your apps) > Web app.
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                // --- DÁN CẤU HÌNH FIREBASE CỦA BẠN VÀO ĐÂY ---
+                // (Xóa các dòng này và thay bằng config thật)
+                // apiKey: "AIza...",
+                // authDomain: "your-project-id.firebaseapp.com",
+                // projectId: "your-project-id",
+                // storageBucket: "your-project-id.appspot.com",
+                // messagingSenderId: "1234567890",
+                // appId: "1:1234567890:web:abcdef123456",
+                // measurementId: "G-ABCDEFGHIJ"
+                // ------------------------------------------
+            };
+
+        // 3. (Không cần thay đổi) Biến token này sẽ là null trên GitHub Pages,
+        // ứng dụng sẽ tự động sử dụng đăng nhập ẩn danh (signInAnonymously).
+        const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        // Thêm kiểm tra nếu firebaseConfig vẫn còn trống
+        if (!firebaseConfig.apiKey) {
+            console.error("LỖI: firebaseConfig chưa được thiết lập!");
+            // Hiển thị thông báo lỗi cho người dùng cuối
+            document.body.innerHTML = `<div style="padding: 40px; text-align: center; font-family: sans-serif; font-size: 1.2em; color: red;">
+                <h1>Lỗi Cấu Hình</h1>
+                <p>Trang web chưa được cấu hình Firebase. Vui lòng liên hệ quản trị viên.</p>
+                <p>(Nếu bạn là quản trị viên, vui lòng dán 'firebaseConfig' vào tệp HTML.)</p>
+            </div>`;
+            // Ngăn không cho code tiếp tục chạy
+            throw new Error("Firebase config is missing.");
+        }
+        
+        // --- Kết thúc phần cấu hình cho GitHub Pages ---
+
 
         // Biến trạng thái App
         let currentPage = 'home';
+        // MỚI: Biến lưu các hàm unsub của listener bình luận
+        let lessonUnsubscribers = {};
         
-        // Biến Video Modal
-        // CẬP NHẬT: Thay đổi biến placeholder thành iframe
+        // Biến Video Modal & Alert
         let videoModal, modalVideoTitle, modalVideoIframe;
+        // MỚI: Thêm biến cho alert modal
+        let modalAlertContent, modalAlertText;
         
         // Biến Quiz
         let currentQuiz = {};
@@ -1157,12 +1371,12 @@
         let flipCount = 0;
         let matchedPairs = 0;
         
-        // Biến Element (Auth)
+        // Biến Element (Auth & Profile)
         let loginLink, registerLink, profileLink, logoutLink;
         let profileEmailEl, profileUserIdEl, profileLogoutBtn;
-        
-        // CẬP NHẬT: Thêm biến cho mục kết quả quiz trên trang hồ sơ
         let profileQuizResultsEl;
+        // MỚI: Biến cho tiến độ bài học trên profile
+        let profileLessonProgressEl;
 
 
         // --- 1. HỆ THỐNG CHUYỂN TRANG (Global) ---
@@ -1188,26 +1402,55 @@
                 }
             });
 
-            // 4. CẬP NHẬT: Tải dữ liệu khi vào trang hồ sơ
-            if (pageId === 'profile') {
-                loadProfileData(); // Gọi hàm mới để tải email, uid VÀ kết quả quiz
+            // 4. (MỚI) Dọn dẹp listeners bình luận cũ
+            // Hủy đăng ký tất cả các listeners bình luận cũ để tránh rò rỉ bộ nhớ
+            Object.values(lessonUnsubscribers).forEach(unsub => unsub());
+            lessonUnsubscribers = {};
+
+            // 5. (MỚI) Tải dữ liệu động cho các trang bài học
+            if (pageId.startsWith('cambridge-unit') || pageId.startsWith('globalsuccess-unit')) {
+                const lessonId = pageId;
+                checkLessonCompletion(lessonId); // Cập nhật nút "Hoàn thành"
+                loadComments(lessonId); // Tải và lắng nghe bình luận
             }
 
-            // 5. Cuộn lên đầu trang
+            // 6. (MỚI) Tải dữ liệu động cho các trang tổng quan (course pages)
+            if (pageId === 'cambridge' || pageId === 'globalsuccess') {
+                loadAllLessonCompletions(pageId);
+            }
+            
+            // 7. (CẬP NHẬT) Tải dữ liệu khi vào trang hồ sơ
+            if (pageId === 'profile') {
+                loadProfileData(); // Tải email, uid, kết quả quiz VÀ TIẾN ĐỘ BÀI HỌC
+            }
+
+            // 8. Cuộn lên đầu trang
             window.scrollTo(0, 0);
         }
 
-        // --- 2. TÍNH NĂNG VIDEO MODAL (Global) ---
-        // CẬP NHẬT: Thay đổi hàm để nhận youtubeId và cập nhật src của iframe
+        // --- 2. TÍNH NĂNG VIDEO MODAL & CUSTOM ALERT (Global) ---
+        
+        // MỚI: Hàm alert tùy chỉnh, tái sử dụng modal
+        window.showCustomAlert = (message) => {
+            modalVideoTitle.textContent = 'Thông báo';
+            modalVideoIframe.style.display = 'none'; // Ẩn video
+            modalAlertContent.style.display = 'block'; // Hiện nội dung alert
+            modalAlertText.textContent = message;
+            videoModal.style.display = 'flex';
+        }
+        
         window.openVideoModal = (title, youtubeId) => {
             modalVideoTitle.textContent = title;
+            modalVideoIframe.style.display = 'block'; // Hiện video
+            modalAlertContent.style.display = 'none'; // Ẩn nội dung alert
+            
             // Thêm ?autoplay=1 để video tự động chạy
             modalVideoIframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1`;
             videoModal.style.display = 'flex';
         }
 
         window.closeVideoModal = () => {
-            // CẬP NHẬT: Đặt src về rỗng để DỪNG video phát trong nền
+            // Đặt src về rỗng để DỪNG video phát trong nền
             modalVideoIframe.src = '';
             videoModal.style.display = 'none';
         }
@@ -1266,8 +1509,13 @@
             }
             
             try {
-                await createUserWithEmailAndPassword(auth, email, password);
+                // Đăng ký user
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 
+                // (Tùy chọn) Lưu thông tin user (ví dụ: email) vào 1 doc riêng
+                // const userDocRef = doc(db, "users", userCredential.user.uid);
+                // await setDoc(userDocRef, { email: email, createdAt: new Date() });
+
                 messageEl.textContent = 'Đăng ký thành công! Đang chuyển về trang chủ...';
                 messageEl.className = 'auth-message success';
                 messageEl.style.display = 'block';
@@ -1278,7 +1526,8 @@
                     event.target.reset();
                 }, 1500);
 
-            } catch (error) {
+            } catch (error)
+{
                 let errorMsg = 'Lỗi đăng ký. Vui lòng thử lại.';
                 if (error.code === 'auth/email-already-in-use') {
                     errorMsg = 'Email này đã được sử dụng.';
@@ -1294,8 +1543,8 @@
             }
         }
         
-        async function handleLogout(event) {
-            event.preventDefault();
+        window.handleLogout = async (event) => {
+            if (event) event.preventDefault(); // Cho phép gọi từ profileLogoutBtn
             try {
                 await signOut(auth);
                 window.showPage('home');
@@ -1335,7 +1584,6 @@
             if (!quizzes[quizId]) return;
             
             currentQuiz = quizzes[quizId];
-            // CẬP NHẬT: Lưu trữ quizId để dùng khi lưu kết quả
             currentQuiz.id = quizId; 
             currentQuestionIndex = 0;
             score = 0;
@@ -1376,12 +1624,14 @@
         }
 
         window.nextQuestion = () => {
+            // Kiểm tra câu trả lời
             const question = currentQuiz.questions[currentQuestionIndex];
             const correct = (selectedAnswerIndex === question.answer);
             if (correct) {
                 score++;
             }
             
+            // Chuyển câu hỏi tiếp theo
             currentQuestionIndex++;
             if (currentQuestionIndex < currentQuiz.questions.length) {
                 renderQuestion();
@@ -1399,11 +1649,11 @@
             const resultText = `Bạn đã trả lời đúng ${score} / ${currentQuiz.questions.length} câu!`;
             quizScoreEl.textContent = resultText;
             
-            // TÍNH NĂNG MỚI: Gọi hàm lưu kết quả vào Firestore
+            // Gọi hàm lưu kết quả vào Firestore
             saveQuizResult(currentQuiz.id, score, currentQuiz.questions.length, currentQuiz.title);
         }
 
-        // TÍNH NĂNG MỚI: Hàm lưu kết quả quiz vào Firestore
+        // Hàm lưu kết quả quiz vào Firestore
         async function saveQuizResult(quizId, score, total, title) {
             if (!currentUser) {
                 console.log("Không thể lưu kết quả (người dùng chưa đăng nhập).");
@@ -1412,6 +1662,7 @@
             
             try {
                 // Sử dụng đường dẫn private: /artifacts/{appId}/users/{userId}/quizResults/{quizId}
+                // Dùng quizId làm ID của doc để dễ dàng ghi đè
                 const docRef = doc(db, "artifacts", appId, "users", currentUser.uid, "quizResults", quizId);
                 const data = {
                     quizId: quizId,
@@ -1420,15 +1671,14 @@
                     total: total,
                     timestamp: new Date() // Lưu lại thời gian làm bài
                 };
-                // Dùng { merge: true } để ghi đè kết quả cũ của bài quiz này
-                await setDoc(docRef, data, { merge: true }); 
+                await setDoc(docRef, data); 
                 console.log("Đã lưu kết quả quiz:", quizId);
             } catch (error) {
                 console.error("Lỗi khi lưu kết quả quiz:", error);
             }
         }
 
-        // TÍNH NĂNG MỚI: Hàm tải dữ liệu cho trang hồ sơ (bao gồm kết quả quiz)
+        // (CẬP NHẬT) Hàm tải dữ liệu cho trang hồ sơ (bao gồm cả tiến độ bài học)
         async function loadProfileData() {
             // 1. Cập nhật thông tin cơ bản
             if (currentUser) {
@@ -1441,42 +1691,79 @@
 
             if (!currentUser) {
                 profileQuizResultsEl.innerHTML = '<p>Vui lòng đăng nhập để xem tiến độ.</p>';
+                profileLessonProgressEl.innerHTML = '<p>Vui lòng đăng nhập để xem tiến độ.</p>';
                 return;
             }
 
+            // Tải Quiz
             try {
-                // Lấy tất cả tài liệu từ collection 'quizResults' của user
                 const collRef = collection(db, "artifacts", appId, "users", currentUser.uid, "quizResults");
                 const querySnapshot = await getDocs(collRef);
 
                 if (querySnapshot.empty) {
                     profileQuizResultsEl.innerHTML = '<p>Chưa có kết quả nào được lưu.</p>';
+                } else {
+                    let html = '<ul style="list-style-type: none; padding-left: 0;">';
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const timestamp = data.timestamp?.seconds ? new Date(data.timestamp.seconds * 1000) : new Date();
+                        
+                        html += `<li style="padding: 10px; border-bottom: 1px solid #eee;">
+                            <strong>${data.title || data.quizId}</strong>: ${data.score} / ${data.total}
+                            <br>
+                            <small style="color: #777;">Làm ngày: ${timestamp.toLocaleString('vi-VN')}</small>
+                        </li>`;
+                    });
+                    html += '</ul>';
+                    profileQuizResultsEl.innerHTML = html;
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải kết quả quiz:", error);
+                profileQuizResultsEl.innerHTML = '<p style="color: red;">Lỗi khi tải kết quả quiz.</p>';
+            }
+            
+            // 3. (MỚI) Tải tiến độ bài học
+            await loadProfileLessonProgress();
+        }
+        
+        // (MỚI) Hàm tải tiến độ bài học cho trang profile
+        async function loadProfileLessonProgress() {
+            const el = profileLessonProgressEl;
+            el.innerHTML = '<p>Đang tải tiến độ...</p>';
+            if (!currentUser) {
+                el.innerHTML = '<p>Vui lòng đăng nhập để xem tiến độ.</p>';
+                return;
+            }
+
+            const collRef = collection(db, "artifacts", appId, "users", currentUser.uid, "lessonProgress");
+            const q = query(collRef, where("completed", "==", true));
+            
+            try {
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) {
+                    el.innerHTML = '<p>Chưa hoàn thành bài học nào.</p>';
                     return;
                 }
 
-                // Xây dựng HTML để hiển thị kết quả
                 let html = '<ul style="list-style-type: none; padding-left: 0;">';
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    // Chuyển đổi Timestamp của Firestore (nếu tồn tại) sang Date của JS
+                    const lessonId = doc.id; // Lấy ID của doc (vd: 'cambridge-unit1')
                     const timestamp = data.timestamp?.seconds ? new Date(data.timestamp.seconds * 1000) : new Date();
-                    
                     html += `<li style="padding: 10px; border-bottom: 1px solid #eee;">
-                        <strong>${data.title || data.quizId}</strong>: ${data.score} / ${data.total}
+                        <strong>${lessonId}</strong>
                         <br>
-                        <small style="color: #777;">Làm ngày: ${timestamp.toLocaleString('vi-VN')}</small>
+                        <small style="color: #777;">Hoàn thành: ${timestamp.toLocaleString('vi-VN')}</small>
                     </li>`;
                 });
                 html += '</ul>';
-                profileQuizResultsEl.innerHTML = html;
-
+                el.innerHTML = html;
             } catch (error) {
-                console.error("Lỗi khi tải kết quả quiz:", error);
-                profileQuizResultsEl.innerHTML = '<p style="color: red;">Lỗi khi tải kết quả.</p>';
+                console.error("Lỗi khi tải tiến độ hồ sơ: ", error);
+                el.innerHTML = '<p style="color: red;">Lỗi khi tải tiến độ bài học.</p>';
             }
         }
-
-
+        
         // --- 5. TÍNH NĂNG GAME FLASHCARD (Global) ---
         
         function shuffleArray(array) {
@@ -1546,9 +1833,10 @@
             flippedCards[1].classList.add('matched');
             matchedPairs++;
             if (matchedPairs === cardData.length / 2) {
-                // Sử dụng modal tùy chỉnh thay vì alert
-                // CẬP NHẬT: Thay đổi hàm alert() thành openVideoModal
-                setTimeout(() => openVideoModal('Chúc mừng!', 'https://placehold.co/560x315/d4edda/155724?text=Hoàn+thành+sau+'+flipCount+'+lần+lật!&font=inter'), 500);
+                setTimeout(() => {
+                    // Sử dụng modal tùy chỉnh
+                    showCustomAlert(`Hoàn thành sau ${flipCount} lần lật!`);
+                }, 500);
             }
             resetBoard();
         }
@@ -1565,12 +1853,232 @@
             [flippedCards, lockBoard] = [[], false];
         }
 
-        // --- 6. KHỞI TẠO APP KHI DOM ĐÃ TẢI ---
+        // --- 6. (MỚI) TÍNH NĂNG TIẾN ĐỘ BÀI HỌC ---
+        
+        // Đánh dấu hoàn thành
+        window.markLessonComplete = async (lessonId) => {
+            if (!currentUser) {
+                showCustomAlert("Bạn cần đăng nhập để lưu tiến độ!");
+                return;
+            }
+            
+            const buttonEl = document.querySelector(`#page-${lessonId} .btn-complete`);
+            if (buttonEl.classList.contains('completed')) return; // Đã hoàn thành
+
+            // Đường dẫn private: /artifacts/{appId}/users/{userId}/lessonProgress/{lessonId}
+            const docRef = doc(db, "artifacts", appId, "users", currentUser.uid, "lessonProgress", lessonId);
+            
+            try {
+                await setDoc(docRef, {
+                    completed: true,
+                    timestamp: new Date(),
+                    lessonId: lessonId // Lưu lại ID để dễ truy vấn ở profile
+                });
+                buttonEl.textContent = 'Đã hoàn thành';
+                buttonEl.classList.add('completed');
+                buttonEl.disabled = true;
+                
+                // Cập nhật icon ở trang course
+                const iconEl = document.getElementById(`icon-${lessonId}`);
+                if (iconEl) {
+                    iconEl.textContent = '✓';
+                }
+            } catch (error) {
+                console.error("Lỗi khi lưu tiến độ: ", error);
+                showCustomAlert("Đã xảy ra lỗi khi lưu tiến độ.");
+            }
+        }
+        
+        // Kiểm tra trạng thái hoàn thành khi tải trang
+        async function checkLessonCompletion(lessonId) {
+            const buttonEl = document.querySelector(`#page-${lessonId} .btn-complete`);
+            if (!buttonEl) return;
+            
+            // Reset trạng thái nút
+            buttonEl.textContent = 'Hoàn thành bài học';
+            buttonEl.classList.remove('completed');
+            buttonEl.disabled = false;
+
+            if (!currentUser) return; // Chưa đăng nhập, không cần kiểm tra
+            
+            const docRef = doc(db, "artifacts", appId, "users", currentUser.uid, "lessonProgress", lessonId);
+            
+            try {
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists() && docSnap.data().completed) {
+                    buttonEl.textContent = 'Đã hoàn thành';
+                    buttonEl.classList.add('completed');
+                    buttonEl.disabled = true;
+                }
+            } catch (error) {
+                console.error("Lỗi khi kiểm tra tiến độ: ", error);
+            }
+        }
+        
+        // Tải tất cả trạng thái hoàn thành cho trang tổng quan (Cambridge, Global Success)
+        async function loadAllLessonCompletions(courseType) {
+            // Xóa các icon cũ
+            document.querySelectorAll(`#page-${courseType} .completion-icon`).forEach(icon => {
+                icon.textContent = '';
+            });
+
+            if (!currentUser) return; // Không hiển thị check nếu chưa đăng nhập
+
+            // Lấy tất cả doc từ collection 'lessonProgress'
+            const collRef = collection(db, "artifacts", appId, "users", currentUser.uid, "lessonProgress");
+            const q = query(collRef, where("completed", "==", true));
+            
+            try {
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                    const lessonId = doc.id; // ID là 'cambridge-unit1', v.v.
+                    // Chỉ cập nhật icon nếu nó tồn tại trên trang hiện tại
+                    const iconEl = document.getElementById(`icon-${lessonId}`);
+                    if (iconEl) {
+                        iconEl.textContent = '✓'; // Thêm dấu check
+                    }
+                });
+            } catch (error) {
+                console.error("Lỗi khi tải toàn bộ tiến độ: ", error);
+            }
+        }
+
+        // --- 7. (MỚI) TÍNH NĂNG BÌNH LUẬN ---
+
+        // Tải và lắng nghe bình luận (real-time)
+        async function loadComments(lessonId) {
+            const commentListEl = document.getElementById(`comment-list-${lessonId}`);
+            if (!commentListEl) return;
+
+            commentListEl.innerHTML = "<p>Đang tải bình luận...</p>";
+            
+            // Đường dẫn public: /artifacts/{appId}/public/data/lessonComments
+            const collRef = collection(db, "artifacts", appId, "public", "data", "lessonComments");
+            
+            // Tạo query để lọc theo lessonId
+            // KHÔNG DÙNG orderBy vì có thể yêu cầu index
+            const q = query(collRef, where("lessonId", "==", lessonId));
+            
+            const unsubscribe = onSnapshot(q, (querySnapshot) => {
+                if (querySnapshot.empty) {
+                    commentListEl.innerHTML = "<p>Chưa có bình luận nào. Hãy là người đầu tiên!</p>";
+                    return;
+                }
+                
+                let comments = [];
+                querySnapshot.forEach((doc) => {
+                    comments.push(doc.data());
+                });
+                
+                // Sắp xếp thủ công trong JS (vì orderBy có thể gây lỗi index)
+                comments.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+
+                commentListEl.innerHTML = ''; // Xóa nội dung "Đang tải..."
+                comments.forEach(comment => {
+                    renderComment(lessonId, comment);
+                });
+                
+                // Tự động cuộn xuống cuối
+                commentListEl.scrollTop = commentListEl.scrollHeight;
+
+            }, (error) => {
+                console.error("Lỗi khi tải bình luận: ", error);
+                commentListEl.innerHTML = "<p style='color:red;'>Không thể tải bình luận.</p>";
+            });
+
+            // Lưu lại hàm unsub để dọn dẹp khi chuyển trang
+            lessonUnsubscribers[lessonId] = unsubscribe;
+        }
+
+        // Hiển thị 1 bình luận
+        function renderComment(lessonId, data) {
+            const commentListEl = document.getElementById(`comment-list-${lessonId}`);
+            if (!commentListEl) return;
+            
+            const item = document.createElement('div');
+            item.className = 'comment-item';
+            
+            const timestamp = data.timestamp?.seconds ? new Date(data.timestamp.seconds * 1000) : new Date();
+            // Lấy tên user (phần trước @) từ email, hoặc 6 ký tự đầu của UID, hoặc 'ẩn danh'
+            const emailName = data.email ? data.email.split('@')[0] : (data.userId ? data.userId.substring(0, 6) : 'Anonymous');
+            
+            // XSS mitigation (đơn giản): thay thế < >
+            const safeText = data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            
+            item.innerHTML = `
+                <strong>${emailName}</strong>
+                <p>${safeText}</p>
+                <small>${timestamp.toLocaleString('vi-VN')}</small>
+            `;
+            commentListEl.appendChild(item);
+        }
+
+        // Gửi bình luận
+        window.postComment = async (lessonId) => {
+            const inputEl = document.getElementById(`comment-input-${lessonId}`);
+            const formEl = document.getElementById(`comment-form-${lessonId}`);
+            const text = inputEl.value.trim();
+            
+            // Xóa thông báo lỗi cũ (nếu có)
+            const oldMsg = formEl.querySelector('.auth-message');
+            if (oldMsg) oldMsg.style.display = 'none';
+
+            if (!text) return; // Không gửi nếu rỗng
+            
+            if (!currentUser || currentUser.isAnonymous) {
+                // Hiển thị thông báo lỗi ngay trên form
+                let msgEl = formEl.querySelector('.auth-message');
+                if (!msgEl) {
+                    msgEl = document.createElement('div');
+                    msgEl.className = 'auth-message error'; // Dùng lại CSS của form auth
+                    formEl.prepend(msgEl); // Thêm vào đầu form
+                }
+                msgEl.textContent = 'Bạn cần Đăng nhập / Đăng ký để bình luận!';
+                msgEl.style.display = 'block';
+                return;
+            }
+            
+            // Đường dẫn public
+            const collRef = collection(db, "artifacts", appId, "public", "data", "lessonComments");
+            
+            try {
+                // Tắt nút gửi
+                formEl.querySelector('button').disabled = true;
+                
+                await addDoc(collRef, {
+                    lessonId: lessonId,
+                    text: text,
+                    userId: currentUser.uid,
+                    email: currentUser.email || null, // Lưu email (nếu có)
+                    timestamp: new Date()
+                });
+                inputEl.value = ''; // Xóa input
+                
+            } catch (error) {
+                console.error("Lỗi khi gửi bình luận: ", error);
+                // Hiển thị lỗi
+                let msgEl = formEl.querySelector('.auth-message');
+                if (!msgEl) {
+                    msgEl = document.createElement('div');
+                    msgEl.className = 'auth-message error';
+                    formEl.prepend(msgEl);
+                }
+                msgEl.textContent = 'Lỗi khi gửi bình luận. Vui lòng thử lại.';
+                msgEl.style.display = 'block';
+            } finally {
+                // Mở lại nút gửi
+                formEl.querySelector('button').disabled = false;
+            }
+        }
+
+
+        // --- 8. KHỞI TẠO APP KHI DOM ĐÃ TẢI ---
         
         document.addEventListener('DOMContentLoaded', async () => {
             
             // Khởi tạo Firebase
             try {
+                // firebaseConfig đã được định nghĩa ở trên
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
@@ -1579,23 +2087,29 @@
 
                 // Lắng nghe thay đổi trạng thái Auth
                 onAuthStateChanged(auth, (user) => {
-                    if (user) {
+                    if (user && !user.isAnonymous) {
+                        // Người dùng đã đăng nhập (có email)
                         currentUser = user;
                         loginLink.style.display = 'none';
                         registerLink.style.display = 'none';
                         profileLink.style.display = 'block';
                         logoutLink.style.display = 'block';
                     } else {
-                        currentUser = null;
+                        // Người dùng ẩn danh hoặc đã đăng xuất
+                        currentUser = user; // (có thể là user ẩn danh, hoặc null)
                         loginLink.style.display = 'block';
                         registerLink.style.display = 'block';
                         profileLink.style.display = 'none';
                         logoutLink.style.display = 'none';
                     }
+                    
+                    // (MỚI) Tải lại dữ liệu trang khi auth thay đổi (ví dụ: đăng nhập/đăng xuất)
+                    // Cần tải lại tiến độ và bình luận
+                    window.showPage(currentPage);
                 });
 
                 // Đăng nhập ban đầu
-                const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                // token đã được định nghĩa ở trên
                 if (token) {
                     await signInWithCustomToken(auth, token);
                     console.log("Đăng nhập bằng Custom Token thành công.");
@@ -1606,15 +2120,20 @@
 
             } catch (error) {
                 console.error("Lỗi khởi tạo Firebase: ", error);
+                // Lỗi này thường xảy ra nếu firebaseConfig không hợp lệ
+                // Thông báo lỗi đã được hiển thị ở phần kiểm tra config
             }
 
             // Gán các Element cho biến
             videoModal = document.getElementById('video-modal');
             modalVideoTitle = document.getElementById('modal-video-title');
-            // CẬP NHẬT: Gán biến cho iframe
             modalVideoIframe = document.getElementById('modal-video-iframe');
+            // MỚI: Gán biến cho alert
+            modalAlertContent = document.getElementById('modal-alert-content');
+            modalAlertText = document.getElementById('modal-alert-text');
 
-            // Gán element cho Auth
+
+            // Gán element cho Auth & Profile
             loginLink = document.getElementById('login-link');
             registerLink = document.getElementById('register-link');
             profileLink = document.getElementById('profile-link');
@@ -1622,8 +2141,9 @@
             profileEmailEl = document.getElementById('profile-email');
             profileUserIdEl = document.getElementById('profile-userid');
             profileLogoutBtn = document.getElementById('profile-logout-btn');
-            // CẬP NHẬT: Gán biến cho vùng kết quả quiz
             profileQuizResultsEl = document.getElementById('profile-quiz-results');
+            // MỚI: Gán biến cho tiến độ bài học profile
+            profileLessonProgressEl = document.getElementById('profile-lesson-progress');
 
             // Gán element cho Quiz
             quizTitleEl = document.getElementById('quiz-title');
@@ -1641,8 +2161,7 @@
             // Thêm trình xử lý sự kiện
             document.getElementById('login-form').addEventListener('submit', handleLogin);
             document.getElementById('register-form').addEventListener('submit', handleRegister);
-            logoutLink.addEventListener('click', handleLogout);
-            profileLogoutBtn.addEventListener('click', handleLogout);
+            // (Đã chuyển onclick ra HTML cho logoutLink và profileLogoutBtn)
 
             // Hiển thị trang chủ ban đầu
             window.showPage('home');

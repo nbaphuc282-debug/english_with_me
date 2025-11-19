@@ -13,14 +13,14 @@
     <style>
         /* --- CSS VARIABLES & RESET --- */
         :root {
-            --primary-color: #6366f1; /* Màu tím xanh chủ đạo */
-            --secondary-color: #a855f7; /* Màu tím nhạt */
-            --accent-color: #06b6d4; /* Màu xanh cyan */
+            --primary-color: #6366f1;
+            --secondary-color: #a855f7;
             --bg-color: #f3f4f6;
             --text-dark: #1f2937;
             --text-light: #6b7280;
             --white: #ffffff;
             --success: #10b981;
+            --warning: #f59e0b; /* Màu vàng cho nút sửa */
             --error: #ef4444;
             --gradient-main: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -41,7 +41,9 @@
         .btn-primary { background: var(--gradient-main); color: var(--white); box-shadow: var(--shadow-md); }
         .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-outline { background: transparent; border: 2px solid var(--primary-color); color: var(--primary-color); }
-        .btn-danger { background-color: var(--error); color: white; }
+        .btn-danger { background-color: var(--error); color: white; padding: 5px 10px; font-size: 0.85rem; }
+        .btn-warning { background-color: var(--warning); color: white; padding: 5px 10px; font-size: 0.85rem; } /* New Button Style */
+        .btn-sm { padding: 5px 10px; font-size: 0.85rem; }
         
         .input-group { margin-bottom: 15px; text-align: left; }
         .input-group label { display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-dark); }
@@ -92,14 +94,41 @@
         /* --- SPECIFIC VIEWS --- */
         /* Lesson Grid */
         .lesson-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .lesson-card { background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); transition: transform 0.2s; border: 1px solid #e5e7eb; display: flex; flex-direction: column; }
+        .lesson-card { background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); transition: transform 0.2s; border: 1px solid #e5e7eb; display: flex; flex-direction: column; position: relative; }
         .lesson-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: var(--primary-color); }
-        .lesson-img { height: 150px; background: var(--gradient-main); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; }
+        
+        .lesson-img { height: 180px; background-size: cover; background-position: center; background-color: #ddd; display: flex; align-items: center; justify-content: center; position: relative;}
+        .lesson-img.no-image { background: var(--gradient-main); }
+        .lesson-img.no-image i { font-size: 3rem; color: white; }
+
         .lesson-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
         .lesson-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; color: var(--text-dark); }
         .lesson-desc { font-size: 0.9rem; color: var(--text-light); margin-bottom: 15px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;}
+        
+        /* Teacher Controls on Card */
+        .teacher-controls {
+            display: flex; gap: 10px; margin-top: 10px; border-top: 1px solid #f3f4f6; padding-top: 10px;
+        }
+        .teacher-controls button { flex: 1; }
 
-        /* Quiz Game */
+        /* Vocabulary Table Styles */
+        .vocab-table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; }
+        .vocab-table th, .vocab-table td { padding: 10px; border: 1px solid #e5e7eb; text-align: left; }
+        .vocab-table th { background: #f3f4f6; font-weight: 600; color: var(--text-dark); }
+        .vocab-row-input { display: grid; grid-template-columns: 1fr 1fr 1fr 40px; gap: 10px; margin-bottom: 10px; align-items: center;}
+        
+        /* Loading & Toast */
+        #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 999; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .toast {
+            position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; background: var(--text-dark);
+            color: white; border-radius: 8px; box-shadow: var(--shadow-md); opacity: 0; transition: opacity 0.3s; z-index: 1000;
+        }
+        .toast.show { opacity: 1; }
+        
+        /* Quiz & Leaderboard */
         .quiz-container { max-width: 800px; margin: 0 auto; text-align: center; }
         .question-box { font-size: 1.2rem; font-weight: 600; margin: 30px 0; }
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -111,7 +140,6 @@
         .option-btn.correct { background: #d1fae5 !important; border-color: var(--success) !important; color: #065f46; }
         .option-btn.wrong { background: #fee2e2 !important; border-color: var(--error) !important; color: #991b1b; }
         
-        /* Leaderboard */
         .leaderboard-table { width: 100%; border-collapse: collapse; }
         .leaderboard-table th { text-align: left; padding: 15px; background: #f9fafb; color: var(--text-light); font-size: 0.85rem; text-transform: uppercase; }
         .leaderboard-table td { padding: 15px; border-bottom: 1px solid #e5e7eb; }
@@ -119,26 +147,11 @@
         .rank-2 { color: #9ca3af; font-weight: bold; }
         .rank-3 { color: #b45309; font-weight: bold; }
 
-        /* Form Creator (Teacher) */
-        .form-section { margin-bottom: 20px; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb; }
-
-        /* Loading & Toast */
-        #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 999; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .toast {
-            position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; background: var(--text-dark);
-            color: white; border-radius: 8px; box-shadow: var(--shadow-md); opacity: 0; transition: opacity 0.3s; z-index: 1000;
-        }
-        .toast.show { opacity: 1; }
-
         /* Responsive */
         @media (max-width: 768px) {
             .main-grid { grid-template-columns: 1fr; padding-top: 20px; }
             .sidebar { margin-bottom: 20px; }
-            .options-grid { grid-template-columns: 1fr; }
-            .nav-logo span { font-size: 1.2rem; }
+            .vocab-row-input { grid-template-columns: 1fr; border-bottom: 1px dashed #ccc; padding-bottom: 10px;}
         }
     </style>
 </head>
@@ -158,7 +171,6 @@
             <h1 class="logo-text">Electro Mind</h1>
             <p style="margin-bottom: 20px; color: var(--text-light);">HUST Electrical Engineering</p>
             
-            <!-- Role Switcher -->
             <div class="role-switch">
                 <button class="role-btn active" onclick="switchAuthRole('student')">Sinh viên</button>
                 <button class="role-btn" onclick="switchAuthRole('teacher')">Giáo viên</button>
@@ -180,7 +192,7 @@
         </div>
     </section>
 
-    <!-- === 2. MAIN APP DASHBOARD (Hidden by default) === -->
+    <!-- === 2. MAIN APP DASHBOARD === -->
     <section id="app-dashboard" class="hidden">
         <header>
             <div class="container navbar">
@@ -199,7 +211,6 @@
         <div class="container main-grid">
             <!-- SIDEBAR -->
             <aside class="sidebar">
-                <!-- Menu cho Student -->
                 <div id="student-menu" class="hidden">
                     <div class="menu-item active" onclick="navigate('student-lessons')">
                         <i class="fa-solid fa-book-open"></i> Bài học
@@ -212,7 +223,6 @@
                     </div>
                 </div>
 
-                <!-- Menu cho Teacher -->
                 <div id="teacher-menu" class="hidden">
                     <div class="menu-item active" onclick="navigate('teacher-create-lesson')">
                         <i class="fa-solid fa-pen-to-square"></i> Đăng bài học
@@ -221,7 +231,7 @@
                         <i class="fa-solid fa-circle-question"></i> Tạo câu hỏi
                     </div>
                     <div class="menu-item" onclick="navigate('student-lessons')">
-                        <i class="fa-solid fa-eye"></i> Xem bài đăng
+                        <i class="fa-solid fa-eye"></i> Quản lý bài đăng
                     </div>
                 </div>
             </aside>
@@ -229,23 +239,24 @@
             <!-- MAIN CONTENT AREA -->
             <main class="content-area">
                 
-                <!-- VIEW: STUDENT LESSON LIST -->
+                <!-- LESSON LIST (SHARED VIEW) -->
                 <div id="view-student-lessons" class="view-section">
                     <h2 class="section-title">Danh sách bài học</h2>
                     <div id="lesson-list" class="lesson-grid">
-                        <!-- Lessons injected here via JS -->
+                        <!-- Lessons injected via JS -->
                     </div>
                 </div>
 
-                <!-- VIEW: LESSON DETAIL (Khi click vào 1 bài học) -->
+                <!-- LESSON DETAIL -->
                 <div id="view-lesson-detail" class="view-section hidden">
                     <button onclick="navigate('student-lessons')" class="btn btn-outline" style="margin-bottom: 20px;">&larr; Quay lại</button>
                     <div class="card">
+                        <div id="detail-image" style="width:100%; height:300px; background-size:cover; background-position:center; border-radius:8px; margin-bottom:20px; display:none;"></div>
                         <h1 id="detail-title" style="color: var(--primary-color); margin-bottom: 10px;">Unit Title</h1>
                         <div style="border-bottom: 1px solid #eee; margin-bottom: 20px;"></div>
                         
                         <h3 style="margin-bottom: 10px;"><i class="fa-solid fa-language"></i> Vocabulary</h3>
-                        <div id="detail-vocab" style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
+                        <div id="detail-vocab-container" style="margin-bottom: 20px;"></div>
                         
                         <h3 style="margin-bottom: 10px;"><i class="fa-solid fa-file-lines"></i> Content</h3>
                         <div id="detail-content" style="line-height: 1.8; margin-bottom: 20px; white-space: pre-wrap;"></div>
@@ -254,17 +265,14 @@
                     </div>
                 </div>
 
-                <!-- VIEW: STUDENT QUIZ GAME -->
+                <!-- QUIZ GAME -->
                 <div id="view-student-quiz" class="view-section hidden">
                     <h2 class="section-title">Mini Game: Thử thách kiến thức</h2>
-                    
                     <div id="quiz-start-screen" class="card text-center" style="text-align: center;">
                         <img src="https://cdn-icons-png.flaticon.com/512/3407/3407037.png" width="100" style="margin-bottom: 20px;">
                         <h3>Sẵn sàng chưa?</h3>
-                        <p style="color: var(--text-light); margin-bottom: 20px;">Trả lời càng nhiều câu đúng càng tốt để leo Top!</p>
                         <button onclick="startQuiz()" class="btn btn-primary">Bắt đầu ngay</button>
                     </div>
-
                     <div id="quiz-play-screen" class="hidden quiz-container">
                         <div class="card">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
@@ -272,44 +280,32 @@
                                 <span>Câu hỏi: <span id="question-counter">1</span>/10</span>
                             </div>
                             <div class="progress-bar" style="width: 100%; height: 6px; background: #eee; border-radius: 3px; margin-bottom: 20px;">
-                                <div id="quiz-progress" style="width: 0%; height: 100%; background: var(--success); border-radius: 3px; transition: width 0.3s;"></div>
+                                <div id="quiz-progress" style="width: 0%; height: 100%; background: var(--success); border-radius: 3px;"></div>
                             </div>
-                            
-                            <div id="question-text" class="question-box">Câu hỏi sẽ hiện ở đây?</div>
-                            
-                            <div id="answers-area" class="options-grid">
-                                <!-- Options buttons -->
-                            </div>
-                            
+                            <div id="question-text" class="question-box"></div>
+                            <div id="answers-area" class="options-grid"></div>
                             <div id="feedback-msg" style="margin-top: 20px; font-weight: bold; height: 24px;"></div>
-                            
                             <button id="btn-next-question" onclick="nextQuestion()" class="btn btn-primary hidden" style="margin-top: 20px;">Câu tiếp theo &rarr;</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- VIEW: LEADERBOARD -->
+                <!-- LEADERBOARD -->
                 <div id="view-leaderboard" class="view-section hidden">
                     <h2 class="section-title">Bảng vàng thành tích</h2>
                     <div class="card">
                         <table class="leaderboard-table">
                             <thead>
-                                <tr>
-                                    <th>Hạng</th>
-                                    <th>Sinh viên</th>
-                                    <th>Điểm số</th>
-                                </tr>
+                                <tr><th>Hạng</th><th>Sinh viên</th><th>Điểm số</th></tr>
                             </thead>
-                            <tbody id="leaderboard-body">
-                                <!-- Rows injected via JS -->
-                            </tbody>
+                            <tbody id="leaderboard-body"></tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- VIEW: TEACHER CREATE LESSON -->
+                <!-- TEACHER: CREATE/EDIT LESSON -->
                 <div id="view-teacher-create-lesson" class="view-section hidden">
-                    <h2 class="section-title">Soạn bài giảng mới</h2>
+                    <h2 class="section-title" id="form-title">Soạn bài giảng mới</h2>
                     <div class="card">
                         <form id="create-lesson-form">
                             <div class="input-group">
@@ -321,59 +317,56 @@
                                 <input type="text" id="lesson-desc" class="input-field" placeholder="Giới thiệu ngắn gọn..." required>
                             </div>
                             <div class="input-group">
+                                <label>Hình ảnh minh họa (URL)</label>
+                                <input type="url" id="lesson-image" class="input-field" placeholder="https://example.com/image.jpg">
+                            </div>
+                            <div class="input-group">
                                 <label>Nội dung chi tiết (Essay/Theory)</label>
                                 <textarea id="lesson-content" class="input-field" rows="6" placeholder="Nhập nội dung bài giảng..." required></textarea>
                             </div>
+                            
+                            <!-- DYNAMIC VOCABULARY INPUT -->
                             <div class="input-group">
-                                <label>Từ vựng (Vocabulary) - Mỗi dòng 1 từ</label>
-                                <textarea id="lesson-vocab" class="input-field" rows="4" placeholder="Word, Pronunciation, Meaning"></textarea>
-                                <small style="color: var(--text-light)">Format: Word, /ipa/, Nghĩa (Ví dụ: Atom, /ˈæt.əm/, Nguyên tử)</small>
+                                <label>Từ vựng (Vocabulary)</label>
+                                <div style="background: #f9fafb; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px;">
+                                    <div id="vocab-input-container">
+                                        <!-- Rows will be added here -->
+                                    </div>
+                                    <button type="button" class="btn btn-outline btn-sm" onclick="addVocabRow()">
+                                        <i class="fa-solid fa-plus"></i> Thêm từ vựng
+                                    </button>
+                                </div>
                             </div>
+
                             <div class="input-group">
                                 <label>Link Video (Youtube Embed URL)</label>
                                 <input type="text" id="lesson-video" class="input-field" placeholder="https://www.youtube.com/embed/...">
                             </div>
-                            <button type="submit" class="btn btn-primary">Đăng bài</button>
+                            <button type="submit" id="form-submit-btn" class="btn btn-primary">Đăng bài</button>
+                            <button type="button" id="btn-cancel-edit" class="btn btn-outline hidden" onclick="cancelEdit()">Hủy chỉnh sửa</button>
                         </form>
                     </div>
                 </div>
 
-                <!-- VIEW: TEACHER CREATE QUIZ -->
+                <!-- TEACHER: CREATE QUIZ -->
                 <div id="view-teacher-create-quiz" class="view-section hidden">
                     <h2 class="section-title">Tạo ngân hàng câu hỏi</h2>
                     <div class="card">
                         <form id="create-quiz-form">
                             <div class="input-group">
                                 <label>Câu hỏi</label>
-                                <input type="text" id="quiz-question" class="input-field" placeholder="Nhập câu hỏi..." required>
+                                <input type="text" id="quiz-question" class="input-field" required>
                             </div>
-                            
                             <div class="options-grid" style="margin-bottom: 15px;">
-                                <div class="input-group">
-                                    <label>Đáp án A</label>
-                                    <input type="text" id="opt-a" class="input-field" required>
-                                </div>
-                                <div class="input-group">
-                                    <label>Đáp án B</label>
-                                    <input type="text" id="opt-b" class="input-field" required>
-                                </div>
-                                <div class="input-group">
-                                    <label>Đáp án C</label>
-                                    <input type="text" id="opt-c" class="input-field" required>
-                                </div>
-                                <div class="input-group">
-                                    <label>Đáp án D</label>
-                                    <input type="text" id="opt-d" class="input-field" required>
-                                </div>
+                                <div class="input-group"><label>Đáp án A</label><input type="text" id="opt-a" class="input-field" required></div>
+                                <div class="input-group"><label>Đáp án B</label><input type="text" id="opt-b" class="input-field" required></div>
+                                <div class="input-group"><label>Đáp án C</label><input type="text" id="opt-c" class="input-field" required></div>
+                                <div class="input-group"><label>Đáp án D</label><input type="text" id="opt-d" class="input-field" required></div>
                             </div>
-
                             <div class="input-group">
                                 <label>Đáp án đúng</label>
                                 <select id="correct-opt" class="input-field">
-                                    <option value="A">A</option>
-                                    <option value="B">B</option>
-                                    <option value="C">C</option>
-                                    <option value="D">D</option>
+                                    <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
                                 </select>
                             </div>
                             <button type="submit" class="btn btn-primary">Lưu câu hỏi</button>
@@ -385,14 +378,12 @@
         </div>
     </section>
 
-    <!-- FIREBASE SDK & LOGIC -->
+    <!-- SCRIPT -->
     <script type="module">
-        // 1. IMPORT FIREBASE LIBRARIES
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDoc, getDocs, doc, setDoc, query, orderBy, limit, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDoc, getDocs, doc, setDoc, query, orderBy, limit, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // 2. FIREBASE CONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyBPAQ8jldVTwtB_uAzz0-oGcZiUaJ3NeyU",
             authDomain: "ewmp-abc18.firebaseapp.com",
@@ -403,39 +394,45 @@
             measurementId: "G-GVP2MCQNLJ"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        // --- MANDATORY: Define App ID and Paths ---
+
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const PUBLIC_DATA_PATH = `artifacts/${appId}/public/data`;
-        
-        function getUserProfilePath(userId) {
-            return `artifacts/${appId}/users/${userId}/profile`;
-        }
+        function getUserProfilePath(userId) { return `artifacts/${appId}/users/${userId}/profile`; }
 
-        // 3. GLOBAL STATE
         let currentUser = null;
-        let currentRole = 'student'; // 'student' or 'teacher'
-        let selectedRoleAuth = 'student'; // For login switch
+        let currentRole = 'student';
+        let selectedRoleAuth = 'student';
+        let editingLessonId = null; // STATE TO TRACK EDIT MODE
 
-        // 4. UI HELPERS
         const get = (id) => document.getElementById(id);
         const show = (id) => get(id).classList.remove('hidden');
         const hide = (id) => get(id).classList.add('hidden');
+        const toggleLoading = (isLoading) => get('loading-overlay').style.display = isLoading ? 'flex' : 'none';
         const showToast = (msg) => {
-            const t = get('toast');
-            t.textContent = msg;
-            t.classList.add('show');
+            const t = get('toast'); t.textContent = msg; t.classList.add('show');
             setTimeout(() => t.classList.remove('show'), 3000);
         }
-        const toggleLoading = (isLoading) => {
-            isLoading ? get('loading-overlay').style.display = 'flex' : get('loading-overlay').style.display = 'none';
-        }
 
-        // 5. NAVIGATION LOGIC
+        // --- VOCAB INPUT LOGIC (Updated to accept params) ---
+        window.addVocabRow = (word='', ipa='', mean='') => {
+            const container = get('vocab-input-container');
+            const div = document.createElement('div');
+            div.className = 'vocab-row-input';
+            div.innerHTML = `
+                <input type="text" class="input-field vocab-word" value="${word}" placeholder="Word">
+                <input type="text" class="input-field vocab-ipa" value="${ipa}" placeholder="IPA">
+                <input type="text" class="input-field vocab-mean" value="${mean}" placeholder="Meaning">
+                <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
+            `;
+            container.appendChild(div);
+        }
+        // Add first row by default
+        window.addEventListener('DOMContentLoaded', () => { addVocabRow(); });
+
+        // --- NAVIGATION ---
         window.switchAuthRole = (role) => {
             selectedRoleAuth = role;
             document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
@@ -443,391 +440,340 @@
         }
 
         window.navigate = (viewId) => {
-            // Hide all views
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-
-            // Show selected view
-            if (viewId === 'student-lessons') {
-                show('view-student-lessons');
-                fetchLessons();
-            } else if (viewId === 'student-quiz') {
-                show('view-student-quiz');
-                hide('quiz-play-screen');
-                show('quiz-start-screen');
-            } else if (viewId === 'leaderboard') {
-                show('view-leaderboard');
-                fetchLeaderboard();
-            } else if (viewId === 'teacher-create-lesson') {
-                show('view-teacher-create-lesson');
-            } else if (viewId === 'teacher-create-quiz') {
-                show('view-teacher-create-quiz');
+            
+            if (viewId === 'teacher-create-lesson') {
+                // IF clicking from menu, reset edit mode to create mode
+                resetLessonForm();
             }
 
-            // Highlight sidebar
+            if (viewId === 'student-lessons') { show('view-student-lessons'); fetchLessons(); }
+            else if (viewId === 'student-quiz') { show('view-student-quiz'); hide('quiz-play-screen'); show('quiz-start-screen'); }
+            else if (viewId === 'leaderboard') { show('view-leaderboard'); fetchLeaderboard(); }
+            else if (viewId === 'teacher-create-lesson') { show('view-teacher-create-lesson'); }
+            else if (viewId === 'teacher-create-quiz') { show('view-teacher-create-quiz'); }
+            
             const activeMenu = document.querySelector(`.menu-item[onclick="navigate('${viewId}')"]`);
             if (activeMenu) activeMenu.classList.add('active');
         }
 
-        // 6. AUTHENTICATION LOGIC
+        // --- AUTH LOGIC ---
         onAuthStateChanged(auth, async (user) => {
             toggleLoading(true);
             if (user) {
                 currentUser = user;
-                // Fetch User Role from PRIVATE PATH
                 try {
                     const userDoc = await getDoc(doc(db, getUserProfilePath(user.uid), "info"));
-                    if (userDoc.exists()) {
-                        currentRole = userDoc.data().role;
-                        setupDashboard(user, currentRole);
-                    } else {
-                        // Fallback: assume student if no profile found
-                        currentRole = 'student';
-                        setupDashboard(user, 'student');
-                    }
-                } catch (e) {
-                    console.error("Error fetching profile:", e);
-                    // Usually happens if user created but profile save failed.
-                    currentRole = 'student';
-                    setupDashboard(user, 'student');
-                }
-            } else {
-                show('auth-screen');
-                hide('app-dashboard');
-            }
+                    currentRole = userDoc.exists() ? userDoc.data().role : 'student';
+                    setupDashboard(user, currentRole);
+                } catch (e) { currentRole = 'student'; setupDashboard(user, 'student'); }
+            } else { show('auth-screen'); hide('app-dashboard'); }
             toggleLoading(false);
         });
 
         function setupDashboard(user, role) {
-            hide('auth-screen');
-            show('app-dashboard');
+            hide('auth-screen'); show('app-dashboard');
             get('user-email').textContent = user.email;
             get('user-badge').textContent = role === 'teacher' ? 'Giáo viên' : 'Sinh viên';
-            
-            // Show correct sidebar menu
-            if (role === 'teacher') {
-                show('teacher-menu');
-                hide('student-menu');
-                window.navigate('teacher-create-lesson');
-            } else {
-                show('student-menu');
-                hide('teacher-menu');
-                window.navigate('student-lessons');
-            }
+            if (role === 'teacher') { show('teacher-menu'); hide('student-menu'); window.navigate('teacher-create-lesson'); }
+            else { show('student-menu'); hide('teacher-menu'); window.navigate('student-lessons'); }
         }
 
-        const authForm = get('auth-form');
-        authForm.addEventListener('submit', async (e) => {
+        get('auth-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = get('email').value;
-            const password = get('password').value;
-            
             toggleLoading(true);
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                await signInWithEmailAndPassword(auth, get('email').value, get('password').value);
                 showToast("Đăng nhập thành công!");
-            } catch (error) {
-                showToast("Lỗi: " + error.message);
-                toggleLoading(false);
-            }
+            } catch (err) { showToast("Lỗi: " + err.message); toggleLoading(false); }
         });
 
-        // Signup Logic
         get('btn-signup').addEventListener('click', async () => {
-            const email = get('email').value;
-            const password = get('password').value;
-            if (!email || !password) return showToast("Vui lòng nhập Email và Mật khẩu");
-
             toggleLoading(true);
             try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                
-                // Save Role to PRIVATE PATH
-                await setDoc(doc(db, getUserProfilePath(user.uid), "info"), {
-                    email: email,
-                    role: selectedRoleAuth,
-                    createdAt: new Date()
-                });
-                
+                const uc = await createUserWithEmailAndPassword(auth, get('email').value, get('password').value);
+                await setDoc(doc(db, getUserProfilePath(uc.user.uid), "info"), { email: get('email').value, role: selectedRoleAuth });
                 showToast("Đăng ký thành công!");
-                // onAuthStateChanged will handle the rest
-            } catch (error) {
-                showToast("Đăng ký lỗi: " + error.message);
-                toggleLoading(false);
-            }
+            } catch (err) { showToast("Lỗi: " + err.message); toggleLoading(false); }
         });
 
-        window.handleLogout = () => {
-            signOut(auth).then(() => {
-                currentUser = null;
-                showToast("Đã đăng xuất");
-                location.reload();
-            });
+        window.handleLogout = () => signOut(auth).then(() => location.reload());
+
+        // --- TEACHER: CREATE / EDIT / DELETE LESSON LOGIC ---
+        
+        // 1. Helper to reset form to "Create Mode"
+        function resetLessonForm() {
+            editingLessonId = null;
+            get('create-lesson-form').reset();
+            get('form-title').textContent = "Soạn bài giảng mới";
+            get('form-submit-btn').textContent = "Đăng bài";
+            hide('btn-cancel-edit');
+            get('vocab-input-container').innerHTML = '';
+            addVocabRow(); // Add one empty row
         }
 
-        // 7. TEACHER FUNCTIONS
-        // Create Lesson (PUBLIC DATA)
+        // 2. Function to enter "Edit Mode" (Called from Lesson Card)
+        window.editLesson = async (lessonId) => {
+            toggleLoading(true);
+            try {
+                const docSnap = await getDoc(doc(db, PUBLIC_DATA_PATH, "lessons", lessonId));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    editingLessonId = lessonId;
+
+                    // Populate Form
+                    get('lesson-title').value = data.title;
+                    get('lesson-desc').value = data.desc;
+                    get('lesson-image').value = data.image || '';
+                    get('lesson-content').value = data.content;
+                    get('lesson-video').value = data.video || '';
+
+                    // Populate Vocab
+                    const container = get('vocab-input-container');
+                    container.innerHTML = ''; // Clear current rows
+                    if (Array.isArray(data.vocabList) && data.vocabList.length > 0) {
+                        data.vocabList.forEach(v => addVocabRow(v.word, v.ipa, v.meaning));
+                    } else {
+                        addVocabRow();
+                    }
+
+                    // Change UI Text
+                    get('form-title').textContent = "Chỉnh sửa bài giảng";
+                    get('form-submit-btn').textContent = "Cập nhật";
+                    show('btn-cancel-edit');
+
+                    // Navigate to form
+                    navigate('teacher-create-lesson');
+                }
+            } catch(e) { showToast("Lỗi tải dữ liệu: " + e.message); }
+            toggleLoading(false);
+        }
+        
+        // 3. Function to Delete Lesson
+        window.deleteLesson = async (lessonId) => {
+            if(!confirm("Bạn có chắc chắn muốn xóa bài giảng này?")) return;
+            toggleLoading(true);
+            try {
+                await deleteDoc(doc(db, PUBLIC_DATA_PATH, "lessons", lessonId));
+                showToast("Đã xóa bài giảng.");
+                fetchLessons(); // Refresh list
+            } catch(e) { showToast("Lỗi xóa: " + e.message); }
+            toggleLoading(false);
+        }
+
+        // 4. Cancel Edit Button
+        window.cancelEdit = () => {
+            resetLessonForm();
+        }
+
+        // 5. Handle Form Submit (Create OR Update)
         get('create-lesson-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (currentRole !== 'teacher') return;
-
             toggleLoading(true);
+            
+            // Collect Vocab
+            const vocabRows = document.querySelectorAll('.vocab-row-input');
+            let vocabData = [];
+            vocabRows.forEach(row => {
+                const w = row.querySelector('.vocab-word').value;
+                const i = row.querySelector('.vocab-ipa').value;
+                const m = row.querySelector('.vocab-mean').value;
+                if(w) vocabData.push({ word: w, ipa: i, meaning: m });
+            });
+
+            const lessonData = {
+                title: get('lesson-title').value,
+                desc: get('lesson-desc').value,
+                image: get('lesson-image').value,
+                content: get('lesson-content').value,
+                vocabList: vocabData,
+                video: get('lesson-video').value,
+                author: currentUser.email,
+                // Keep createdAt if editing, else new Date
+                ...(editingLessonId ? { updatedAt: new Date() } : { createdAt: new Date() }) 
+            };
+
             try {
-                await addDoc(collection(db, PUBLIC_DATA_PATH, "lessons"), {
-                    title: get('lesson-title').value,
-                    desc: get('lesson-desc').value,
-                    content: get('lesson-content').value,
-                    vocab: get('lesson-vocab').value,
-                    video: get('lesson-video').value,
-                    author: currentUser.email,
-                    createdAt: new Date()
-                });
-                showToast("Đã đăng bài học mới!");
-                get('create-lesson-form').reset();
-            } catch (err) {
-                showToast("Lỗi: " + err.message);
-            }
+                if (editingLessonId) {
+                    // UPDATE
+                    await updateDoc(doc(db, PUBLIC_DATA_PATH, "lessons", editingLessonId), lessonData);
+                    showToast("Đã cập nhật bài giảng!");
+                } else {
+                    // CREATE
+                    await addDoc(collection(db, PUBLIC_DATA_PATH, "lessons"), lessonData);
+                    showToast("Đã đăng bài học mới!");
+                }
+                
+                resetLessonForm();
+            } catch (err) { showToast("Lỗi: " + err.message); }
             toggleLoading(false);
         });
 
-        // Create Quiz (PUBLIC DATA)
+        // --- TEACHER: CREATE QUIZ (No changes) ---
         get('create-quiz-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (currentRole !== 'teacher') return;
-
             toggleLoading(true);
             try {
                 await addDoc(collection(db, PUBLIC_DATA_PATH, "quizzes"), {
                     question: get('quiz-question').value,
-                    options: {
-                        A: get('opt-a').value,
-                        B: get('opt-b').value,
-                        C: get('opt-c').value,
-                        D: get('opt-d').value
-                    },
+                    options: { A: get('opt-a').value, B: get('opt-b').value, C: get('opt-c').value, D: get('opt-d').value },
                     correct: get('correct-opt').value,
                     createdAt: new Date()
                 });
                 showToast("Đã thêm câu hỏi!");
                 get('create-quiz-form').reset();
-            } catch (err) {
-                showToast("Lỗi: " + err.message);
-            }
+            } catch (err) { showToast("Lỗi: " + err.message); }
             toggleLoading(false);
         });
 
-        // 8. STUDENT FUNCTIONS
-        // Fetch Lessons (PUBLIC DATA)
+        // --- STUDENT/SHARED: FETCH LESSONS ---
         async function fetchLessons() {
             toggleLoading(true);
-            const listContainer = get('lesson-list');
-            listContainer.innerHTML = '';
-            
+            const listContainer = get('lesson-list'); listContainer.innerHTML = '';
             try {
                 const q = query(collection(db, PUBLIC_DATA_PATH, "lessons"), orderBy("createdAt", "desc"));
                 const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) listContainer.innerHTML = '<p>Chưa có bài học nào.</p>';
                 
-                if (querySnapshot.empty) {
-                    listContainer.innerHTML = '<p>Chưa có bài học nào.</p>';
-                }
-
                 querySnapshot.forEach((doc) => {
                     const d = doc.data();
-                    // Create Card UI
+                    const imgStyle = d.image ? `background-image: url('${d.image}');` : '';
+                    const imgClass = d.image ? 'lesson-img' : 'lesson-img no-image';
+                    const imgContent = d.image ? '' : '<i class="fa-solid fa-atom"></i>';
+
+                    // Add Teacher Controls if Teacher
+                    let teacherControls = '';
+                    if (currentRole === 'teacher') {
+                        teacherControls = `
+                            <div class="teacher-controls">
+                                <button class="btn btn-warning btn-sm" onclick="editLesson('${doc.id}')"><i class="fa-solid fa-pen"></i> Sửa</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteLesson('${doc.id}')"><i class="fa-solid fa-trash"></i> Xóa</button>
+                            </div>
+                        `;
+                    }
+
                     const card = document.createElement('div');
                     card.className = 'lesson-card';
                     card.innerHTML = `
-                        <div class="lesson-img">
-                            <i class="fa-solid fa-atom"></i>
+                        <div class="${imgClass}" style="${imgStyle}">
+                            ${imgContent}
                         </div>
                         <div class="lesson-body">
                             <div class="lesson-title">${d.title}</div>
                             <div class="lesson-desc">${d.desc}</div>
                             <button class="btn btn-outline" style="width:100%" onclick="openLesson('${doc.id}')">Học ngay</button>
+                            ${teacherControls}
                         </div>
                     `;
                     listContainer.appendChild(card);
                 });
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (err) { console.error(err); }
             toggleLoading(false);
         }
 
-        // Open Lesson Detail
         window.openLesson = async (lessonId) => {
             toggleLoading(true);
             try {
-                const docRef = doc(db, PUBLIC_DATA_PATH, "lessons", lessonId);
-                const docSnap = await getDoc(docRef);
+                const docSnap = await getDoc(doc(db, PUBLIC_DATA_PATH, "lessons", lessonId));
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    
-                    hide('view-student-lessons');
-                    show('view-lesson-detail');
-                    
+                    hide('view-student-lessons'); show('view-lesson-detail');
                     get('detail-title').textContent = data.title;
                     get('detail-content').textContent = data.content;
-                    
-                    // Parse Vocab
-                    const vocabHtml = data.vocab ? data.vocab.split('\n').map(line => `<div style="padding:5px 0; border-bottom:1px dashed #ddd">${line}</div>`).join('') : 'Không có từ vựng.';
-                    get('detail-vocab').innerHTML = vocabHtml;
-
-                    // Video
-                    if(data.video) {
-                        get('detail-video-container').innerHTML = `<iframe width="100%" height="400" src="${data.video}" frameborder="0" allowfullscreen style="border-radius:8px;"></iframe>`;
+                    if (data.image) {
+                        get('detail-image').style.display = 'block';
+                        get('detail-image').style.backgroundImage = `url('${data.image}')`;
                     } else {
-                         get('detail-video-container').innerHTML = '';
+                        get('detail-image').style.display = 'none';
                     }
+
+                    // PARSE VOCAB
+                    let vocabHtml = '';
+                    if (Array.isArray(data.vocabList) && data.vocabList.length > 0) {
+                        vocabHtml = `
+                            <table class="vocab-table">
+                                <thead><tr><th>Word</th><th>Pronunciation</th><th>Meaning</th></tr></thead>
+                                <tbody>
+                                    ${data.vocabList.map(v => `<tr><td><b>${v.word}</b></td><td>${v.ipa || ''}</td><td>${v.meaning || ''}</td></tr>`).join('')}
+                                </tbody>
+                            </table>
+                        `;
+                    } else if (data.vocab) {
+                        // Fallback old format
+                        vocabHtml = data.vocab.split('\n').map(line => `<div style="padding:5px 0; border-bottom:1px dashed #ddd">${line}</div>`).join('');
+                    } else {
+                        vocabHtml = '<p>Không có từ vựng.</p>';
+                    }
+                    get('detail-vocab-container').innerHTML = vocabHtml;
+                    if(data.video) get('detail-video-container').innerHTML = `<iframe width="100%" height="400" src="${data.video}" frameborder="0" allowfullscreen style="border-radius:8px;"></iframe>`;
+                    else get('detail-video-container').innerHTML = '';
                 }
-            } catch (err) {
-                showToast("Lỗi tải bài học");
-            }
+            } catch (err) { showToast("Lỗi tải bài học"); }
             toggleLoading(false);
         }
 
-        // 9. QUIZ GAME LOGIC
-        let quizQuestions = [];
-        let currentQIndex = 0;
-        let score = 0;
-
+        // --- QUIZ & LEADERBOARD (Same as before) ---
+        let quizQuestions=[], currentQIndex=0, score=0;
         window.startQuiz = async () => {
             toggleLoading(true);
             try {
-                // Get random 10 questions
                 const qSnap = await getDocs(collection(db, PUBLIC_DATA_PATH, "quizzes"));
-                let allQ = [];
-                qSnap.forEach(doc => allQ.push({id: doc.id, ...doc.data()}));
-                
-                if (allQ.length === 0) {
-                    showToast("Chưa có câu hỏi nào!");
-                    toggleLoading(false);
-                    return;
-                }
-
-                // Shuffle and take 10
-                quizQuestions = allQ.sort(() => 0.5 - Math.random()).slice(0, 10);
-                currentQIndex = 0;
-                score = 0;
-                
-                hide('quiz-start-screen');
-                show('quiz-play-screen');
+                let allQ = []; qSnap.forEach(doc => allQ.push({id: doc.id, ...doc.data()}));
+                if (allQ.length === 0) { showToast("Chưa có câu hỏi!"); toggleLoading(false); return; }
+                quizQuestions = allQ.sort(()=>0.5-Math.random()).slice(0,10);
+                currentQIndex=0; score=0;
+                hide('quiz-start-screen'); show('quiz-play-screen');
                 renderQuestion();
-            } catch (err) {
-                showToast("Lỗi tải câu hỏi");
-            }
+            } catch (err) { showToast("Lỗi tải câu hỏi"); }
             toggleLoading(false);
         }
-
         function renderQuestion() {
             const q = quizQuestions[currentQIndex];
             get('current-score').textContent = score;
-            get('question-counter').textContent = currentQIndex + 1;
+            get('question-counter').textContent = currentQIndex+1;
             get('question-text').textContent = q.question;
-            
-            // Update progress bar
-            const progressPercent = ((currentQIndex) / quizQuestions.length) * 100;
-            get('quiz-progress').style.width = `${progressPercent}%`;
-
-            const area = get('answers-area');
-            area.innerHTML = '';
-            get('feedback-msg').textContent = '';
-            hide('btn-next-question');
-
-            ['A', 'B', 'C', 'D'].forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                btn.innerHTML = `<b>${opt}.</b> ${q.options[opt]}`;
-                btn.onclick = () => checkAnswer(opt, q.correct, btn);
+            get('quiz-progress').style.width = `${((currentQIndex)/quizQuestions.length)*100}%`;
+            const area = get('answers-area'); area.innerHTML=''; get('feedback-msg').textContent=''; hide('btn-next-question');
+            ['A','B','C','D'].forEach(opt => {
+                const btn = document.createElement('button'); btn.className='option-btn';
+                btn.innerHTML=`<b>${opt}.</b> ${q.options[opt]}`;
+                btn.onclick=()=>checkAnswer(opt,q.correct,btn);
                 area.appendChild(btn);
             });
         }
-
-        function checkAnswer(selected, correct, btnElement) {
-            // Disable all buttons
-            const btns = document.querySelectorAll('.option-btn');
-            btns.forEach(b => {
-                b.classList.add('disabled');
-                b.onclick = null;
-                // Highlight correct answer anyway
-                if (b.innerHTML.includes(`<b>${correct}.</b>`)) {
-                    b.classList.add('correct');
-                }
+        function checkAnswer(sel, corr, btn) {
+            document.querySelectorAll('.option-btn').forEach(b=>{
+                b.classList.add('disabled'); b.onclick=null;
+                if(b.innerHTML.includes(`<b>${corr}.</b>`)) b.classList.add('correct');
             });
-
-            if (selected === correct) {
-                score += 10;
-                get('current-score').textContent = score;
-                get('feedback-msg').textContent = "Chính xác! +10 điểm";
-                get('feedback-msg').style.color = "var(--success)";
-            } else {
-                btnElement.classList.add('wrong');
-                get('feedback-msg').textContent = "Sai rồi!";
-                get('feedback-msg').style.color = "var(--error)";
-            }
-
+            if(sel===corr) { score+=10; get('current-score').textContent=score; get('feedback-msg').textContent="Chính xác! +10 điểm"; get('feedback-msg').style.color="var(--success)"; }
+            else { btn.classList.add('wrong'); get('feedback-msg').textContent="Sai rồi!"; get('feedback-msg').style.color="var(--error)"; }
             show('btn-next-question');
         }
-
         window.nextQuestion = async () => {
             currentQIndex++;
-            if (currentQIndex < quizQuestions.length) {
-                renderQuestion();
-            } else {
-                // End Game
-                showToast(`Kết thúc! Điểm của bạn: ${score}`);
-                await saveScore(score);
+            if(currentQIndex<quizQuestions.length) renderQuestion();
+            else {
+                showToast(`Kết thúc! Điểm: ${score}`);
+                if(currentUser) await addDoc(collection(db, PUBLIC_DATA_PATH, "scores"), { email: currentUser.email, score: score, timestamp: new Date() });
                 window.navigate('leaderboard');
             }
         }
-
-        async function saveScore(finalScore) {
-            if (!currentUser) return;
-            try {
-                // Save to PUBLIC DATA for leaderboard
-                await addDoc(collection(db, PUBLIC_DATA_PATH, "scores"), {
-                    email: currentUser.email,
-                    score: finalScore,
-                    timestamp: new Date()
-                });
-            } catch (err) {
-                console.error("Lỗi lưu điểm", err);
-            }
-        }
-
-        // 10. LEADERBOARD LOGIC
         async function fetchLeaderboard() {
             toggleLoading(true);
-            const tbody = get('leaderboard-body');
-            tbody.innerHTML = '';
-
+            const tbody = get('leaderboard-body'); tbody.innerHTML='';
             try {
                 const q = query(collection(db, PUBLIC_DATA_PATH, "scores"), orderBy("score", "desc"), limit(10));
-                const querySnapshot = await getDocs(q);
-                
-                let rank = 1;
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const row = document.createElement('tr');
-                    
-                    let rankClass = '';
-                    if (rank === 1) rankClass = 'rank-1';
-                    if (rank === 2) rankClass = 'rank-2';
-                    if (rank === 3) rankClass = 'rank-3';
-
-                    row.innerHTML = `
-                        <td class="${rankClass}">#${rank}</td>
-                        <td>${data.email.split('@')[0]}</td>
-                        <td style="font-weight:bold">${data.score}</td>
-                    `;
-                    tbody.appendChild(row);
-                    rank++;
+                const qs = await getDocs(q);
+                let r=1; qs.forEach(doc=>{
+                    const d=doc.data();
+                    let cls = r===1?'rank-1':r===2?'rank-2':r===3?'rank-3':'';
+                    tbody.innerHTML+=`<tr><td class="${cls}">#${r++}</td><td>${d.email.split('@')[0]}</td><td style="font-weight:bold">${d.score}</td></tr>`;
                 });
-            } catch (err) {
-                showToast("Lỗi tải bảng xếp hạng");
-                console.error(err);
-            }
+            } catch(e){ console.error(e); }
             toggleLoading(false);
         }
     </script>

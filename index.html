@@ -3,615 +3,751 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electro Mind - HUST Electrical Engineering</title>
-    <!-- Tailwind CSS -->
+    <title>Electro Mind - HUST Learning Platform</title>
+    
+    <!-- Tailwind CSS (Design System) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome (Icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Confetti Effect -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Custom Config for Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#7c3aed', // Violet-600 based on design
+                        secondary: '#4f46e5', // Indigo-600
+                        accent: '#10b981', // Emerald-500 (Success)
+                        danger: '#ef4444', // Red-500 (Error)
+                    }
+                }
+            }
+        }
+    </script>
     
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
-        
-        .bg-brand-gradient { background: linear-gradient(135deg, #6C5CE7 0%, #a29bfe 100%); }
-        .text-brand { color: #6C5CE7; }
-        .border-brand { border-color: #6C5CE7; }
-        
-        .lesson-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .lesson-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
-        .hidden-section { display: none !important; }
-        
-        /* Auth Form Styles */
-        .input-field { @apply mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500; }
-        .btn-primary { @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-gradient hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c7c7cc; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1aa; 
+        }
         
         /* Animations */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .quiz-option:hover {
+            transform: translateX(5px);
+        }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="bg-gray-50 text-gray-800 h-screen flex flex-col overflow-hidden">
 
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center cursor-pointer" onclick="window.app.goHome()">
-                    <i class="fa-solid fa-bolt text-brand text-2xl mr-2"></i>
-                    <span class="font-bold text-xl tracking-tight text-gray-800">Electro Mind</span>
+    <!-- ================= HEADER / NAVBAR ================= -->
+    <header class="bg-white shadow-sm z-20 relative">
+        <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+            <!-- Logo & Mobile Menu Toggle -->
+            <div class="flex items-center gap-4">
+                <button id="mobile-menu-btn" class="lg:hidden text-gray-600 text-xl">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <a href="#" onclick="renderHome()" class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-white font-bold text-lg">E</div>
+                    <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">Electro Mind</span>
+                </a>
+            </div>
+
+            <!-- Desktop Navigation -->
+            <nav class="hidden lg:flex items-center gap-8 font-medium text-sm text-gray-600">
+                <a href="#" onclick="renderHome()" class="hover:text-primary transition">Trang chủ</a>
+                <div class="relative group cursor-pointer">
+                    <span class="hover:text-primary transition flex items-center gap-1">Khóa học <i class="fa-solid fa-chevron-down text-xs"></i></span>
+                    <!-- Dropdown Mockup -->
+                    <div class="absolute top-full left-0 w-48 bg-white shadow-lg rounded-md p-2 hidden group-hover:block border border-gray-100">
+                        <div class="p-2 hover:bg-gray-50 rounded cursor-pointer text-primary">Electrical Engineering</div>
+                    </div>
                 </div>
-                <div class="flex items-center space-x-2 md:space-x-4">
-                    <button onclick="window.app.goHome()" class="text-gray-600 hover:text-brand px-3 py-2 rounded-md text-sm font-medium">Khóa học</button>
-                    
-                    <!-- Game Zone Button (Protected) -->
-                    <button onclick="window.app.handleProtectedAction('game')" class="text-gray-600 hover:text-brand px-3 py-2 rounded-md text-sm font-medium flex items-center">
-                        <i class="fa-solid fa-gamepad mr-1 text-purple-500"></i> Game Zone
-                        <i id="nav-lock-icon" class="fa-solid fa-lock text-xs text-gray-400 ml-1"></i>
+                <a href="#" onclick="alert('Tính năng đang phát triển!')" class="hover:text-primary transition">Luyện tập</a>
+            </nav>
+
+            <!-- Auth Section -->
+            <div id="auth-container" class="flex items-center gap-3">
+                <!-- Loading State -->
+                <div id="auth-loading" class="hidden text-sm text-gray-500">Đang tải...</div>
+
+                <!-- Guest State -->
+                <div id="auth-guest" class="flex items-center gap-3">
+                    <button onclick="openAuthModal('login')" class="text-primary font-medium text-sm hover:underline">Đăng nhập</button>
+                    <button onclick="openAuthModal('register')" class="bg-gradient-to-r from-primary to-secondary text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg shadow-primary/30 hover:shadow-xl transition transform hover:-translate-y-0.5">Đăng ký</button>
+                </div>
+
+                <!-- User State -->
+                <div id="auth-user" class="hidden flex items-center gap-3">
+                    <span id="user-email" class="text-sm font-medium text-gray-700 hidden md:block"></span>
+                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 border border-gray-300">
+                        <i class="fa-regular fa-user"></i>
+                    </div>
+                    <button onclick="handleLogout()" class="text-gray-500 hover:text-danger text-sm" title="Đăng xuất">
+                        <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
-                    
-                    <!-- Auth UI -->
-                    <div id="auth-container" class="ml-2">
-                        <!-- Guest: Show Login Button -->
-                        <button id="btn-login-nav" onclick="window.app.toggleAuthModal(true)" class="bg-brand-gradient text-white px-5 py-2 rounded-full text-sm font-medium hover:opacity-90 shadow-md transition">
-                            Đăng nhập
-                        </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= MAIN LAYOUT ================= -->
+    <div class="flex flex-1 overflow-hidden relative">
+        
+        <!-- SIDEBAR (Lesson List) -->
+        <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 flex-shrink-0 absolute lg:static h-full z-10 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 shadow-xl lg:shadow-none">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="font-bold text-gray-800">Danh sách bài học</h3>
+                <button class="lg:hidden text-gray-500" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="overflow-y-auto h-[calc(100%-60px)] p-3 space-y-1" id="lesson-list">
+                <!-- Lesson Items will be injected here via JS -->
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 overflow-y-auto bg-slate-50 relative w-full" id="main-content">
+            <!-- Dynamic Content will be injected here -->
+        </main>
+
+    </div>
+
+    <!-- ================= AUTH MODAL ================= -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative animate-fadeIn">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            
+            <h2 id="modal-title" class="text-2xl font-bold text-center mb-6 text-gray-800">Đăng nhập</h2>
+            
+            <form id="auth-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="email-input" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" placeholder="sinhvien@hust.edu.vn" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
+                    <input type="password" id="password-input" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" placeholder="••••••••" required>
+                </div>
+                <div id="auth-error" class="text-danger text-sm text-center hidden"></div>
+                <button type="submit" class="w-full bg-primary text-white py-2.5 rounded-lg font-bold hover:bg-violet-700 transition shadow-lg shadow-primary/30">
+                    <span id="submit-btn-text">Đăng nhập</span>
+                </button>
+            </form>
+            
+            <p class="text-center mt-4 text-sm text-gray-600">
+                <span id="switch-text">Chưa có tài khoản?</span>
+                <button onclick="switchAuthMode()" id="switch-btn" class="text-primary font-semibold hover:underline">Đăng ký ngay</button>
+            </p>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+
+    <!-- FIREBASE CONFIG & LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+        // --- 1. CONFIGURATION ---
+        // NOTE: User needs to fill this in!
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPAQ8jldVTwtB_uAzz0-oGcZiUaJ3NeyU",
+            authDomain: "ewmp-abc18.firebaseapp.com",
+            projectId: "ewmp-abc18",
+            storageBucket: "ewmp-abc18.firebasestorage.app",
+            messagingSenderId: "416084778745",
+            appId: "1:416084778745:web:edb8de27952c3007e24c28"
+            measurementId: "G-GVP2MCQNLJ"
+        };
+
+        let auth;
+        let currentUser = null;
+
+        // Initialize Firebase safely
+        try {
+            if (firebaseConfig.apiKey) {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+            } else {
+                console.warn("Firebase chưa được cấu hình. Vui lòng điền API Key trong code.");
+            }
+        } catch (e) {
+            console.error("Firebase Error:", e);
+        }
+
+        // --- 2. GLOBAL STATE ---
+        window.appState = {
+            user: null,
+            currentUnitId: null,
+            quizScore: 0
+        };
+
+        // --- 3. AUTHENTICATION LOGIC ---
+        
+        // Expose functions to window for HTML onclick attributes
+        window.openAuthModal = (mode) => {
+            const modal = document.getElementById('auth-modal');
+            const title = document.getElementById('modal-title');
+            const btnText = document.getElementById('submit-btn-text');
+            const switchText = document.getElementById('switch-text');
+            const switchBtn = document.getElementById('switch-btn');
+            
+            window.currentAuthMode = mode; // 'login' or 'register'
+            
+            if (mode === 'login') {
+                title.textContent = 'Đăng nhập';
+                btnText.textContent = 'Đăng nhập';
+                switchText.textContent = 'Chưa có tài khoản?';
+                switchBtn.textContent = 'Đăng ký ngay';
+            } else {
+                title.textContent = 'Đăng ký tài khoản';
+                btnText.textContent = 'Đăng ký';
+                switchText.textContent = 'Đã có tài khoản?';
+                switchBtn.textContent = 'Đăng nhập';
+            }
+            
+            modal.classList.remove('hidden');
+        };
+
+        window.closeAuthModal = () => {
+            document.getElementById('auth-modal').classList.add('hidden');
+            document.getElementById('auth-error').classList.add('hidden');
+            document.getElementById('auth-form').reset();
+        };
+
+        window.switchAuthMode = () => {
+            window.openAuthModal(window.currentAuthMode === 'login' ? 'register' : 'login');
+        };
+
+        window.handleLogout = async () => {
+            if(!auth) return;
+            try {
+                await signOut(auth);
+                alert("Đã đăng xuất thành công!");
+                renderHome(); // Reset view
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        // Handle Form Submit
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if(!auth) {
+                alert("Vui lòng cấu hình Firebase Config trong code trước!");
+                return;
+            }
+
+            const email = document.getElementById('email-input').value;
+            const password = document.getElementById('password-input').value;
+            const errorDiv = document.getElementById('auth-error');
+            const submitBtn = document.querySelector('#auth-form button[type="submit"]');
+
+            errorDiv.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50');
+
+            try {
+                if (window.currentAuthMode === 'login') {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                }
+                window.closeAuthModal();
+            } catch (error) {
+                errorDiv.textContent = getFriendlyErrorMessage(error.code);
+                errorDiv.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50');
+            }
+        });
+
+        // Error Translation
+        function getFriendlyErrorMessage(code) {
+            switch(code) {
+                case 'auth/invalid-email': return 'Email không hợp lệ.';
+                case 'auth/user-disabled': return 'Tài khoản đã bị khóa.';
+                case 'auth/user-not-found': return 'Không tìm thấy tài khoản này.';
+                case 'auth/wrong-password': return 'Sai mật khẩu.';
+                case 'auth/email-already-in-use': return 'Email này đã được đăng ký.';
+                case 'auth/weak-password': return 'Mật khẩu phải có ít nhất 6 ký tự.';
+                default: return 'Đã có lỗi xảy ra: ' + code;
+            }
+        }
+
+        // Auth State Listener
+        if(auth) {
+            onAuthStateChanged(auth, (user) => {
+                window.appState.user = user;
+                updateAuthUI(user);
+            });
+        } else {
+            // Fallback UI for demo without config
+            updateAuthUI(null); 
+        }
+
+        function updateAuthUI(user) {
+            const guestDiv = document.getElementById('auth-guest');
+            const userDiv = document.getElementById('auth-user');
+            const loadingDiv = document.getElementById('auth-loading');
+            const userEmailSpan = document.getElementById('user-email');
+
+            loadingDiv.classList.add('hidden');
+
+            if (user) {
+                guestDiv.classList.add('hidden');
+                userDiv.classList.remove('hidden');
+                userDiv.classList.add('flex');
+                userEmailSpan.textContent = `Xin chào, ${user.email}`;
+                
+                // Re-render content if in a protected area
+                const main = document.getElementById('main-content');
+                if (main.querySelector('#locked-message')) {
+                   renderUnit(window.appState.currentUnitId);
+                }
+            } else {
+                guestDiv.classList.remove('hidden');
+                userDiv.classList.add('hidden');
+                userDiv.classList.remove('flex');
+            }
+        }
+    </script>
+
+    <!-- CONTENT DATA & UI LOGIC -->
+    <script>
+        // --- 4. COURSE DATA (Extracted from Word File) ---
+        // Only populating first few units fully for clean code demonstration.
+        // The structure supports all 10 units.
+        
+        const courseData = [
+            {
+                id: 1,
+                title: "Unit 1: Electrons",
+                icon: "fa-atom",
+                desc: "Understanding the basic building blocks of matter.",
+                vocabulary: [
+                    { word: "Electric charge", ipa: "/ɪˈlek.trɪk ,tʃɑːdʒ/", mean: "Điện tích" },
+                    { word: "Positive charge", ipa: "/ˈpɒz.ə.tɪv ,tʃɑːdʒ/", mean: "Điện tích dương" },
+                    { word: "Negative charge", ipa: "/ˈneɡ.ə.tɪv,tʃɑːdʒ/", mean: "Điện tích âm" },
+                    { word: "Nucleus", ipa: "/ˈnjuː.kli.əs/", mean: "Hạt nhân" },
+                    { word: "Neutron", ipa: "/ˈnjuː.trɒn/", mean: "Nơ-t-rông" },
+                    { word: "Isotopes", ipa: "/ˈaɪ.sə.təʊp/", mean: "Đồng vị" }
+                ],
+                essay: `
+                    <h4 class="font-bold text-lg mb-2">Atomic Structure</h4>
+                    <p class="mb-3">Atoms consist of an extremely small, positively charged nucleus surrounded by a cloud of negatively charged electrons. Although typically the nucleus is less than one ten-thousandth the size of the atom, the nucleus contains more that 99.9% of the mass of the atom.</p>
+                    <p class="mb-3">Nuclei are made of positively charged protons and electrically neutral neutrons held together by a nuclear force. This force is much stronger than the electrostatic force that binds electrons to the nucleus, but its range is limited to distances of the order of 1 x 10-15 meters.</p>
+                    <div class="my-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500 italic">
+                        "Atoms of the same element can have different number of neutrons and they are called isotopes of that element. Example: hydrogen-1, hydrogen-2 (deuterium)."
+                    </div>
+                `,
+                quiz: [
+                    { q: "What is the approximate fraction of an atom’s mass found in the nucleus?", options: ["About 10%", "About 50%", "More than 99.9%", "Less than 1%"], correct: 2 },
+                    { q: "Which particles are found in the nucleus?", options: ["Electrons only", "Protons and electrons", "Protons and neutrons", "Neutrons and electrons"], correct: 2 },
+                    { q: "What type of force holds protons and neutrons together?", options: ["Gravitational", "Nuclear force", "Electrostatic", "Magnetic"], correct: 1 },
+                    { q: "The atomic number (Z) is defined as the number of:", options: ["Neutrons", "Protons", "Electrons", "Nucleons"], correct: 1 },
+                    { q: "Isotopes of an element have the same number of:", options: ["Neutrons", "Protons", "Electrons", "Atomic mass"], correct: 1 }
+                ]
+            },
+            {
+                id: 2,
+                title: "Unit 2: Electric Current",
+                icon: "fa-bolt",
+                desc: "Flow of charge, carriers, and circuits.",
+                vocabulary: [
+                    { word: "Current", ipa: "/ˈkʌr.ənt/", mean: "Dòng điện" },
+                    { word: "Charge carrier", ipa: "/tʃɑːdʒ ˈkær.i.ər/", mean: "Hạt mang điện" },
+                    { word: "Conductor", ipa: "/kənˈdʌk.tər/", mean: "Vật dẫn điện" },
+                    { word: "Drift velocity", ipa: "/drɪft vəˈlɒs.ə.ti/", mean: "Vận tốc trôi" }
+                ],
+                essay: `
+                    <h4 class="font-bold text-lg mb-2">Nature of Electric Current</h4>
+                    <p class="mb-3">When a battery is connected to a bulb to make a complete circuit, there is an electric current everywhere in the circuit. Something flows steadily. That thing is charge.</p>
+                    <p>In metallic wires, the electrons are the moving charged particles. They are simply part of the atoms that make up the battery, wires and bulb. The current is the same at each point in the single circuit loop – there are no leaks!</p>
+                `,
+                quiz: [
+                    { q: "What flows steadily in a complete electric circuit?", options: ["Energy", "Charge", "Heat", "Waves"], correct: 1 },
+                    { q: "In metallic wires, the charge carriers are:", options: ["Positive ions", "Negative electrons", "Protons", "Neutrons"], correct: 1 },
+                    { q: "Where is the current the same in a series circuit?", options: ["Near battery", "Near bulb", "Everywhere", "Nowhere"], correct: 2 }
+                ]
+            },
+            {
+                id: 3,
+                title: "Unit 3: Cells and Batteries",
+                icon: "fa-battery-full",
+                desc: "Primary cells, secondary cells, and applications.",
+                vocabulary: [
+                     { word: "Battery", ipa: "/ˈbӕtəri/", mean: "Pin/Ắc quy" },
+                     { word: "Rechargeable", ipa: "/riːˈtʃɑː.dʒə.bəl/", mean: "Có thể sạc lại" },
+                     { word: "Electrode", ipa: "/iˈlektrəud/", mean: "Điện cực" }
+                ],
+                essay: "<p>An Electric Cell is a power-generating device that converts stored chemical energy into electrical energy. A battery is a combination of cells connected in series or parallel.</p>",
+                quiz: [
+                    { q: "Which type of cell cannot be recharged?", options: ["Primary cell", "Secondary cell", "Fuel cell", "Reserve cell"], correct: 0 },
+                    { q: "A battery is defined as:", options: ["A single cell", "A combination of cells", "A generator", "An insulator"], correct: 1 }
+                ]
+            },
+            { id: 4, title: "Unit 4: Sources of Power", icon: "fa-solar-panel", desc: "Generation, transmission, and renewables.", vocabulary: [], essay: "<p>Content for Unit 4...</p>", quiz: [] },
+            { id: 5, title: "Unit 5: Mains Electricity", icon: "fa-plug", desc: "AC/DC, safety, plugs and fuses.", vocabulary: [], essay: "<p>Content for Unit 5...</p>", quiz: [] },
+            { id: 6, title: "Unit 6: Electricity & Magnetism", icon: "fa-magnet", desc: "Fields, flux, and electromagnetism.", vocabulary: [], essay: "<p>Content for Unit 6...</p>", quiz: [] },
+            { id: 7, title: "Unit 7: Resistors", icon: "fa-microchip", desc: "Ohm's law, types of resistors.", vocabulary: [], essay: "<p>Content for Unit 7...</p>", quiz: [] },
+            { id: 8, title: "Unit 8: Capacitors", icon: "fa-layer-group", desc: "Storing charge, dielectrics.", vocabulary: [], essay: "<p>Content for Unit 8...</p>", quiz: [] },
+            { id: 9, title: "Unit 9: Inductors", icon: "fa-ring", desc: "Magnetic energy storage, coils.", vocabulary: [], essay: "<p>Content for Unit 9...</p>", quiz: [] },
+            { id: 10, title: "Unit 10: Semiconductors", icon: "fa-memory", desc: "Diodes, P-N junctions, LEDs.", vocabulary: [], essay: "<p>Content for Unit 10...</p>", quiz: [] },
+        ];
+
+        const leaderboardData = [
+            { name: "Nguyễn Văn A", score: 980, avatar: "NV" },
+            { name: "Trần Thị B", score: 950, avatar: "TT" },
+            { name: "Lê Hoàng C", score: 890, avatar: "LH" },
+            { name: "Phạm Minh D", score: 850, avatar: "PM" },
+            { name: "Hoàng Anh E", score: 820, avatar: "HA" },
+        ];
+
+        // --- 5. UI RENDERING LOGIC ---
+
+        function renderSidebar() {
+            const list = document.getElementById('lesson-list');
+            list.innerHTML = courseData.map(unit => `
+                <div onclick="renderUnit(${unit.id})" class="cursor-pointer p-3 rounded-lg hover:bg-violet-50 group transition flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition text-xs">
+                        <i class="fa-solid ${unit.icon}"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-700 group-hover:text-primary">${unit.title}</p>
+                        <p class="text-xs text-gray-400 truncate w-32">${unit.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Landing Page / Dashboard
+        window.renderHome = () => {
+            const main = document.getElementById('main-content');
+            window.appState.currentUnitId = null;
+            
+            main.innerHTML = `
+                <!-- Hero Banner -->
+                <div class="bg-gradient-to-r from-primary to-secondary text-white p-8 md:p-12 relative overflow-hidden">
+                    <div class="relative z-10 max-w-2xl">
+                        <h1 class="text-3xl md:text-4xl font-bold mb-4">Học Tiếng Anh chuyên ngành Điện - Điện Tử</h1>
+                        <p class="text-blue-100 mb-6 text-lg">Nền tảng hỗ trợ sinh viên HUST (FL1 & FL2) nắm vững từ vựng và kiến thức chuyên ngành.</p>
+                        ${!window.appState.user ? 
+                            `<button onclick="openAuthModal('login')" class="bg-white text-primary px-6 py-3 rounded-full font-bold hover:bg-gray-100 transition shadow-lg">Bắt đầu ngay >></button>` : 
+                            `<button onclick="renderUnit(1)" class="bg-accent text-white px-6 py-3 rounded-full font-bold hover:bg-emerald-600 transition shadow-lg">Tiếp tục học Unit 1 >></button>`
+                        }
+                    </div>
+                    <!-- Abstract Decoration -->
+                    <div class="absolute right-0 bottom-0 opacity-20 transform translate-x-1/4 translate-y-1/4">
+                         <i class="fa-solid fa-atom text-[300px]"></i>
+                    </div>
+                </div>
+
+                <div class="p-6 md:p-8 max-w-6xl mx-auto">
+                    <!-- Stats / Features -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl"><i class="fa-solid fa-book-open"></i></div>
+                            <div><h4 class="font-bold">10 Unit</h4><p class="text-sm text-gray-500">Kiến thức chuẩn</p></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xl"><i class="fa-solid fa-gamepad"></i></div>
+                            <div><h4 class="font-bold">Gamification</h4><p class="text-sm text-gray-500">Vừa học vừa chơi</p></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-xl"><i class="fa-solid fa-trophy"></i></div>
+                            <div><h4 class="font-bold">Xếp hạng</h4><p class="text-sm text-gray-500">Thi đua thành tích</p></div>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard Section (Only visible if logged in) -->
+                    ${window.appState.user ? renderLeaderboardHTML() : ''}
+                </div>
+            `;
+        };
+
+        function renderLeaderboardHTML() {
+            return `
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden fade-in">
+                    <div class="bg-yellow-50 p-4 border-b border-yellow-100 flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-yellow-800"><i class="fa-solid fa-crown mr-2"></i>Bảng Vàng Thành Tích</h3>
+                        <span class="text-xs font-semibold bg-yellow-200 text-yellow-800 px-2 py-1 rounded">Tuần này</span>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        ${leaderboardData.map((u, index) => `
+                            <div class="flex items-center justify-between p-4 hover:bg-gray-50">
+                                <div class="flex items-center gap-4">
+                                    <div class="font-bold text-gray-400 w-6 text-center">${index + 1}</div>
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center text-sm font-bold text-gray-600">
+                                        ${u.avatar}
+                                    </div>
+                                    <span class="font-medium text-gray-700">${u.name}</span>
+                                </div>
+                                <div class="font-bold text-primary">${u.score} pts</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Specific Unit Content
+        window.renderUnit = (unitId) => {
+            window.appState.currentUnitId = unitId;
+            const unit = courseData.find(u => u.id === unitId);
+            const main = document.getElementById('main-content');
+
+            // Close mobile sidebar if open
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+
+            main.innerHTML = `
+                <div class="max-w-4xl mx-auto p-6 pb-24 fade-in">
+                    <!-- Header -->
+                    <div class="mb-8 border-b pb-4">
+                        <div class="flex items-center gap-2 text-sm text-primary font-semibold mb-2">
+                            <span onclick="renderHome()" class="cursor-pointer hover:underline">Trang chủ</span> / <span>${unit.title}</span>
+                        </div>
+                        <h2 class="text-3xl font-bold text-gray-900">${unit.title}</h2>
+                        <p class="text-gray-500 mt-2">${unit.desc}</p>
+                    </div>
+
+                    <!-- Content Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         
-                        <!-- User: Show Profile -->
-                        <div id="user-profile" class="hidden-section flex items-center space-x-3">
-                            <span id="display-name" class="text-gray-700 font-semibold text-sm hidden sm:block truncate max-w-[100px]">Student</span>
-                            <div class="relative group">
-                                <img id="user-avatar" src="https://ui-avatars.com/api/?name=User&background=6C5CE7&color=fff" class="h-9 w-9 rounded-full cursor-pointer ring-2 ring-purple-100">
-                                <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block border border-gray-100 z-50">
-                                    <div class="px-4 py-2 text-xs text-gray-400 border-b" id="user-email">email@example.com</div>
-                                    <a href="#" onclick="window.app.handleLogout()" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
-                                        <i class="fa-solid fa-right-from-bracket mr-2"></i> Đăng xuất
+                        <!-- Left: Learning Content -->
+                        <div class="lg:col-span-2 space-y-8">
+                            
+                            <!-- Vocabulary Section -->
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <div class="bg-blue-50 px-6 py-3 border-b border-blue-100">
+                                    <h3 class="font-bold text-blue-800"><i class="fa-solid fa-language mr-2"></i>Vocabulary</h3>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm text-left">
+                                        <thead class="text-xs text-gray-500 uppercase bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3">Word</th>
+                                                <th class="px-6 py-3">Pronunciation</th>
+                                                <th class="px-6 py-3">Meaning</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-100">
+                                            ${unit.vocabulary.length ? unit.vocabulary.map(v => `
+                                                <tr class="hover:bg-gray-50">
+                                                    <td class="px-6 py-4 font-medium text-gray-900">${v.word}</td>
+                                                    <td class="px-6 py-4 font-mono text-gray-500 text-xs">${v.ipa}</td>
+                                                    <td class="px-6 py-4 text-gray-600">${v.mean}</td>
+                                                </tr>
+                                            `).join('') : '<tr><td colspan="3" class="p-4 text-center text-gray-400">Đang cập nhật...</td></tr>'}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Reading/Essay Section -->
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-gray-700 leading-relaxed">
+                                ${unit.essay}
+                            </div>
+
+                        </div>
+
+                        <!-- Right: Gamification Sidebar -->
+                        <div class="lg:col-span-1">
+                            <div class="sticky top-4 space-y-6">
+                                
+                                <!-- Quiz Card -->
+                                <div class="bg-white rounded-xl shadow-lg border border-purple-100 overflow-hidden relative">
+                                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+                                    <div class="p-6 text-center">
+                                        <div class="w-16 h-16 bg-purple-100 text-primary rounded-full flex items-center justify-center text-2xl mx-auto mb-4 animate-bounce">
+                                            <i class="fa-solid fa-puzzle-piece"></i>
+                                        </div>
+                                        <h3 class="text-xl font-bold text-gray-800 mb-2">Ôn tập nhanh</h3>
+                                        <p class="text-sm text-gray-500 mb-6">Kiểm tra kiến thức của bạn qua ${unit.quiz.length} câu hỏi trắc nghiệm.</p>
+                                        
+                                        ${window.appState.user ? 
+                                            `<button onclick="startQuiz(${unitId})" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-violet-700 transition shadow-lg shadow-primary/30">Bắt đầu ngay</button>` :
+                                            `<div class="bg-gray-50 p-3 rounded text-sm text-gray-500 border border-gray-200">
+                                                <i class="fa-solid fa-lock mr-1"></i> Đăng nhập để làm bài tập
+                                            </div>`
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Video Resources (Static Mockup) -->
+                                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                                    <h4 class="font-bold text-gray-800 mb-3 text-sm">Video tham khảo</h4>
+                                    <a href="https://www.youtube.com/@EngineeringMindset" target="_blank" class="block group">
+                                        <div class="relative rounded-lg overflow-hidden aspect-video bg-gray-900 mb-2">
+                                            <img src="https://img.youtube.com/vi/hsldXsJ5H_c/mqdefault.jpg" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition">
+                                            <div class="absolute inset-0 flex items-center justify-center">
+                                                <i class="fa-solid fa-play-circle text-white text-4xl"></i>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs font-medium text-gray-700 group-hover:text-primary">The Engineering Mindset</p>
                                     </a>
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
-            </div>
-        </div>
-    </nav>
+            `;
+        }
 
-    <!-- Main Content -->
-    <main id="main-container" class="flex-grow bg-gray-50 relative">
-        
-        <!-- 1. HOME VIEW -->
-        <div id="home-view">
-            <!-- Hero -->
-            <div class="bg-brand-gradient text-white py-16 mb-10 relative overflow-hidden">
-                <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center relative z-10">
-                    <div class="md:w-2/3">
-                        <span class="bg-white/20 text-xs font-bold px-3 py-1 rounded-full mb-4 inline-block backdrop-blur">HUST FL1 & FL2</span>
-                        <h1 class="text-4xl md:text-5xl font-bold mb-4 leading-tight">Electrical Engineering & Electronics</h1>
-                        <p class="text-lg text-purple-100 mb-8 max-w-xl">Nền tảng học tập tích hợp Gamification giúp bạn chinh phục tiếng Anh chuyên ngành.</p>
-                        <div class="flex gap-3">
-                            <button onclick="document.getElementById('courses-list').scrollIntoView({behavior:'smooth'})" class="bg-white text-brand px-6 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition">Xem bài học</button>
-                            <button onclick="window.app.handleProtectedAction('game')" class="border-2 border-white/50 hover:bg-white hover:text-brand text-white px-6 py-3 rounded-full font-bold transition flex items-center">
-                                <i class="fa-solid fa-trophy mr-2"></i> Thử thách
-                            </button>
-                        </div>
-                    </div>
-                    <div class="md:w-1/3 mt-8 md:mt-0 flex justify-center">
-                        <i class="fa-solid fa-atom text-9xl text-white/20 animate-spin-slow"></i>
-                    </div>
-                </div>
-            </div>
+        // --- 6. GAMIFICATION LOGIC (QUIZ) ---
 
-            <!-- Course Grid -->
-            <div id="courses-list" class="max-w-7xl mx-auto px-4 pb-16">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                    <i class="fa-solid fa-book-open text-brand mr-2"></i> Danh sách bài học
-                </h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="lesson-grid"></div>
-            </div>
-        </div>
+        window.startQuiz = (unitId) => {
+            const unit = courseData.find(u => u.id === unitId);
+            if (!unit || unit.quiz.length === 0) {
+                alert("Bài tập cho unit này đang được cập nhật.");
+                return;
+            }
 
-        <!-- 2. GAME ZONE (PROTECTED) -->
-        <div id="game-view" class="hidden-section max-w-7xl mx-auto px-4 py-10">
-            <div class="text-center mb-10">
-                <h1 class="text-3xl font-bold text-gray-800"><span class="text-brand">Electro</span> Arena</h1>
-                <p class="text-gray-500">Vừa học vừa chơi - Tích lũy điểm thưởng</p>
-            </div>
+            const main = document.getElementById('main-content');
+            let currentQuestionIndex = 0;
+            let score = 0;
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Game Area -->
-                <div class="lg:col-span-2">
-                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden min-h-[450px] relative">
-                        <!-- Start Screen -->
-                        <div id="game-start" class="absolute inset-0 flex flex-col items-center justify-center p-8 bg-white z-10">
-                            <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mb-6 text-brand text-3xl">
-                                <i class="fa-solid fa-rocket"></i>
-                            </div>
-                            <h2 class="text-2xl font-bold text-gray-800 mb-2">Ôn tập nhanh</h2>
-                            <p class="text-gray-500 text-center mb-8">Hệ thống sẽ chọn ngẫu nhiên 5 câu hỏi. Sẵn sàng chưa?</p>
-                            <button onclick="window.app.startGame()" class="bg-brand-gradient text-white px-8 py-3 rounded-full font-bold shadow-lg hover:translate-y-1 transition">Bắt đầu ngay</button>
-                        </div>
-                        <!-- Play Screen -->
-                        <div id="game-play" class="hidden-section h-full flex flex-col">
-                            <div class="bg-gray-50 px-6 py-4 border-b flex justify-between">
-                                <span class="font-bold text-gray-600">Câu <span id="game-q-curr">1</span>/5</span>
-                                <span class="bg-white px-3 py-1 rounded-full border text-sm font-bold text-brand shadow-sm">Score: <span id="game-score">0</span></span>
-                            </div>
-                            <div class="p-8 flex-grow flex flex-col justify-center">
-                                <h3 class="text-xl font-semibold text-gray-800 mb-6" id="game-question-text">...</h3>
-                                <div class="grid gap-3" id="game-options"></div>
-                                <div id="game-feedback" class="mt-4 h-6 text-center font-bold text-sm"></div>
-                            </div>
-                        </div>
-                        <!-- Result Screen -->
-                        <div id="game-result" class="hidden-section absolute inset-0 flex flex-col items-center justify-center bg-white z-20">
-                            <i class="fa-solid fa-crown text-6xl text-yellow-400 mb-4"></i>
-                            <h2 class="text-3xl font-bold text-gray-800">Hoàn thành!</h2>
-                            <div class="text-5xl font-bold text-brand my-6"><span id="final-score">0</span>/50</div>
-                            <div class="flex gap-3">
-                                <button onclick="window.app.startGame()" class="bg-gray-100 px-6 py-2 rounded-full font-bold hover:bg-gray-200">Chơi lại</button>
-                                <button onclick="window.app.goHome()" class="bg-brand-gradient text-white px-6 py-2 rounded-full font-bold">Về trang chủ</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Leaderboard -->
-                <div class="lg:col-span-1">
-                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 h-full flex flex-col">
-                        <div class="bg-brand-gradient p-5 text-white text-center rounded-t-2xl">
-                            <h3 class="font-bold text-lg"><i class="fa-solid fa-medal mr-2"></i>Bảng Vàng</h3>
-                        </div>
-                        <div class="p-4 flex-grow overflow-y-auto">
-                            <ul class="space-y-3" id="leaderboard-list"></ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. LESSON DETAIL VIEW -->
-        <div id="lesson-view" class="hidden-section max-w-7xl mx-auto px-4 py-8">
-            <button onclick="window.app.goHome()" class="mb-4 text-gray-500 hover:text-brand flex items-center">
-                <i class="fa-solid fa-arrow-left mr-2"></i> Quay lại
-            </button>
-            <div class="bg-white rounded-2xl shadow-lg flex flex-col md:flex-row min-h-[600px]">
-                <aside class="w-full md:w-1/4 bg-gray-50 border-r p-4 overflow-y-auto h-[600px]">
-                    <h3 class="font-bold text-xs text-gray-500 uppercase mb-4">Mục lục</h3>
-                    <ul id="sidebar-list" class="space-y-1"></ul>
-                </aside>
-                <div class="w-full md:w-3/4 p-8 overflow-y-auto h-[600px]">
-                    <h1 id="lesson-title" class="text-2xl font-bold text-brand mb-6">Title</h1>
-                    <div class="flex border-b mb-6">
-                        <button class="px-4 py-2 border-b-2 border-brand font-bold text-brand" id="tab-btn-essay" onclick="window.app.switchTab('essay')">Lý thuyết</button>
-                        <button class="px-4 py-2 text-gray-500 hover:text-gray-700" id="tab-btn-vocab" onclick="window.app.switchTab('vocab')">Từ vựng</button>
-                    </div>
-                    <div id="tab-essay" class="tab-content">
-                        <div id="essay-content" class="prose max-w-none text-gray-700"></div>
-                    </div>
-                    <div id="tab-vocab" class="tab-content hidden-section">
-                        <table class="min-w-full divide-y divide-gray-200"><tbody id="vocab-table-body"></tbody></table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- AUTH MODAL (Sign In / Sign Up) -->
-        <div id="auth-modal" class="fixed inset-0 z-[100] hidden-section overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" onclick="window.app.toggleAuthModal(false)"></div>
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-                
-                <div class="inline-block align-middle bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:max-w-sm w-full">
-                    <div class="bg-white px-8 py-8">
-                        <div class="text-center mb-6">
-                            <h3 class="text-2xl font-bold text-gray-900" id="auth-title">Đăng nhập</h3>
-                            <p class="text-sm text-gray-500 mt-1" id="auth-subtitle">Chào mừng bạn quay trở lại!</p>
-                        </div>
-
-                        <!-- Error Message -->
-                        <div id="auth-error" class="hidden-section mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg flex items-center">
-                            <i class="fa-solid fa-circle-exclamation mr-2"></i> <span id="auth-error-text">Error</span>
-                        </div>
-
-                        <form id="auth-form" onsubmit="window.app.handleAuthSubmit(event)">
-                            <div class="space-y-4">
-                                <!-- Name Field (Only for Register) -->
-                                <div id="field-name" class="hidden-section">
-                                    <label class="block text-sm font-medium text-gray-700">Họ tên</label>
-                                    <input type="text" id="input-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none" placeholder="VD: Nguyễn Văn A">
+            // Render Quiz Interface
+            const renderQuestion = () => {
+                if (currentQuestionIndex >= unit.quiz.length) {
+                    // Finish
+                    main.innerHTML = `
+                        <div class="min-h-full flex items-center justify-center p-4 fade-in">
+                            <div class="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md w-full">
+                                <div class="text-6xl mb-4">🎉</div>
+                                <h2 class="text-2xl font-bold text-gray-800 mb-2">Hoàn thành!</h2>
+                                <p class="text-gray-600 mb-6">Bạn đã trả lời đúng <span class="text-primary font-bold text-xl">${score}/${unit.quiz.length}</span> câu hỏi.</p>
+                                <div class="flex gap-3 justify-center">
+                                    <button onclick="renderUnit(${unitId})" class="px-6 py-2 border border-gray-300 rounded-lg font-medium hover:bg-gray-50">Học lại</button>
+                                    <button onclick="renderHome()" class="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-violet-700">Về trang chủ</button>
                                 </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Email</label>
-                                    <input type="email" id="input-email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none" placeholder="student@hust.edu.vn">
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Mật khẩu</label>
-                                    <input type="password" id="input-password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none" placeholder="••••••••">
-                                </div>
-
-                                <button type="submit" id="btn-auth-submit" class="w-full bg-brand-gradient text-white py-2.5 rounded-lg font-bold shadow-md hover:opacity-90 transition flex justify-center items-center">
-                                    <span id="btn-auth-text">Đăng nhập</span>
-                                    <i class="fa-solid fa-arrow-right ml-2"></i>
-                                </button>
                             </div>
-                        </form>
-
-                        <div class="mt-6 text-center text-sm">
-                            <p class="text-gray-500">
-                                <span id="auth-switch-text">Chưa có tài khoản?</span>
-                                <button type="button" onclick="window.app.switchAuthMode()" class="text-brand font-bold hover:underline focus:outline-none" id="auth-switch-btn">
-                                    Đăng ký ngay
-                                </button>
-                            </p>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- APP LOGIC -->
-    <script type="module">
-        // --- 1. FIREBASE CONFIGURATION (Modular SDK v9) ---
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            signOut, 
-            onAuthStateChanged, 
-            updateProfile,
-            signInWithCustomToken,
-            signInAnonymously
-        } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-
-        // PLACEHOLDER FOR YOUR API KEYS:
-        // const firebaseConfig = {
-        //     apiKey: "YOUR_API_KEY_HERE",
-        //     authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        //     projectId: "YOUR_PROJECT_ID",
-        //     storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        //     messagingSenderId: "YOUR_SENDER_ID",
-        //     appId: "YOUR_APP_ID"
-        // };
-const firebaseConfig = {
-  apiKey: "AIzaSyBPAQ8jldVTwtB_uAzz0-oGcZiUaJ3NeyU",
-  authDomain: "ewmp-abc18.firebaseapp.com",
-  projectId: "ewmp-abc18",
-  storageBucket: "ewmp-abc18.firebasestorage.app",
-  messagingSenderId: "416084778745",
-  appId: "1:416084778745:web:edb8de27952c3007e24c28",
-  measurementId: "G-GVP2MCQNLJ"
-};
-        // USING ENVIRONMENT CONFIG (For Preview only - Replace with object above for production)
-        const firebaseConfig = JSON.parse(__firebase_config);
-        
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-
-        // --- 2. DATA STORE (Units Content) ---
-        const unitsData = [
-            { id: 1, title: "Unit 1: Electrons", desc: "Cấu trúc nguyên tử, điện tích.", vocab: [{w:"Atom",p:"/ˈæt.əm/",m:"Nguyên tử"}, {w:"Nucleus",p:"/ˈnjuː.kli.əs/",m:"Hạt nhân"}], essay: "<p>Atoms consist of a nucleus and electrons.</p>", quiz: [{q:"Hạt nhân gồm?", a:["Proton, Neutron", "Electron"], c:0}] },
-            { id: 2, title: "Unit 2: Current", desc: "Dòng điện và vật dẫn.", vocab: [{w:"Current",p:"/ˈkʌr.ənt/",m:"Dòng điện"}], essay: "<p>Current is flow of charge.</p>", quiz: [{q:"Dòng điện là?", a:["Dòng điện tích", "Dòng nước"], c:0}] },
-            { id: 3, title: "Unit 3: Batteries", desc: "Pin và nguồn điện.", vocab: [{w:"Battery",p:"",m:"Pin"}], essay: "<p>Batteries store chemical energy.</p>", quiz: [{q:"Pin lưu trữ gì?", a:["Hóa năng", "Cơ năng"], c:0}] },
-            { id: 4, title: "Unit 4: Power Sources", desc: "Nguồn năng lượng.", vocab: [{w:"Hydro",p:"",m:"Thủy điện"}], essay: "<p>Power plants generate electricity.</p>", quiz: [{q:"Thủy điện dùng gì?", a:["Nước", "Gió"], c:0}] },
-            { id: 5, title: "Unit 5: Mains", desc: "Điện lưới an toàn.", vocab: [{w:"Fuse",p:"",m:"Cầu chì"}], essay: "<p>Mains electricity is AC.</p>", quiz: [{q:"Điện lưới là?", a:["AC", "DC"], c:0}] },
-            { id: 6, title: "Unit 6: Magnetism", desc: "Điện từ trường.", vocab: [{w:"Magnet",p:"",m:"Nam châm"}], essay: "<p>Current creates magnetic fields.</p>", quiz: [{q:"Cuộn dây có điện sinh ra?", a:["Từ trường", "Nhiệt"], c:0}] },
-            { id: 7, title: "Unit 7: Resistors", desc: "Điện trở & Ohm.", vocab: [{w:"Ohm",p:"",m:"Ôm"}], essay: "<p>Resistors limit current.</p>", quiz: [{q:"Đơn vị trở?", a:["Ohm", "Volt"], c:0}] },
-            { id: 8, title: "Unit 8: Capacitors", desc: "Tụ điện.", vocab: [{w:"Farad",p:"",m:"Fa-ra"}], essay: "<p>Capacitors store charge.</p>", quiz: [{q:"Tụ điện tích gì?", a:["Điện tích", "Từ"], c:0}] },
-            { id: 9, title: "Unit 9: Inductors", desc: "Cuộn cảm.", vocab: [{w:"Henry",p:"",m:"Henry"}], essay: "<p>Inductors oppose current change.</p>", quiz: [{q:"Cuộn cảm dùng?", a:["Từ trường", "Điện trường"], c:0}] },
-            { id: 10, title: "Unit 10: Diodes", desc: "Bán dẫn & LED.", vocab: [{w:"Diode",p:"",m:"Đi-ốt"}], essay: "<p>Diodes are one-way valves.</p>", quiz: [{q:"Diode dẫn điện mấy chiều?", a:["1", "2"], c:0}] }
-        ];
-
-        const mockLeaderboard = [
-            { name: "Trần Văn A", score: 980, avatar: "https://ui-avatars.com/api/?name=Van+A&background=FFD700" },
-            { name: "Lê Thị B", score: 950, avatar: "https://ui-avatars.com/api/?name=Thi+B&background=C0C0C0" },
-            { name: "Nguyễn C", score: 920, avatar: "https://ui-avatars.com/api/?name=Nguyen+C&background=CD7F32" }
-        ];
-
-        // --- 3. APPLICATION LOGIC ---
-        const appLogic = {
-            user: null,
-            authMode: 'login', // 'login' or 'register'
-            
-            // Game state
-            gameQ: [],
-            qIdx: 0,
-            score: 0,
-
-            init: async function() {
-                this.renderGrid();
-                this.renderLeaderboard(); // Render but stays hidden if locked
-                
-                // Environment Auth Setup (System Requirement)
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                }
-
-                // Auth Listener
-                onAuthStateChanged(auth, (user) => {
-                    this.user = user;
-                    // If anonymous, treat as Guest for UI logic
-                    if (user && !user.isAnonymous) {
-                        this.handleLoginSuccess(user);
-                    } else {
-                        this.handleLogoutSuccess();
-                    }
-                });
-            },
-
-            // --- AUTH ACTIONS ---
-            
-            toggleAuthModal: function(show) {
-                const modal = document.getElementById('auth-modal');
-                if(show) {
-                    modal.classList.remove('hidden-section');
-                    this.resetAuthForm();
-                } else {
-                    modal.classList.add('hidden-section');
-                }
-            },
-
-            switchAuthMode: function() {
-                this.authMode = this.authMode === 'login' ? 'register' : 'login';
-                const title = document.getElementById('auth-title');
-                const sub = document.getElementById('auth-subtitle');
-                const btnText = document.getElementById('btn-auth-text');
-                const switchText = document.getElementById('auth-switch-text');
-                const switchBtn = document.getElementById('auth-switch-btn');
-                const nameField = document.getElementById('field-name');
-
-                if(this.authMode === 'register') {
-                    title.innerText = "Đăng ký tài khoản";
-                    sub.innerText = "Tạo tài khoản miễn phí để tham gia thi đấu.";
-                    btnText.innerText = "Đăng ký";
-                    switchText.innerText = "Đã có tài khoản?";
-                    switchBtn.innerText = "Đăng nhập ngay";
-                    nameField.classList.remove('hidden-section');
-                } else {
-                    title.innerText = "Đăng nhập";
-                    sub.innerText = "Chào mừng bạn quay trở lại!";
-                    btnText.innerText = "Đăng nhập";
-                    switchText.innerText = "Chưa có tài khoản?";
-                    switchBtn.innerText = "Đăng ký ngay";
-                    nameField.classList.add('hidden-section');
-                }
-                document.getElementById('auth-error').classList.add('hidden-section');
-            },
-
-            resetAuthForm: function() {
-                this.authMode = 'login';
-                document.getElementById('auth-form').reset();
-                document.getElementById('field-name').classList.add('hidden-section');
-                this.switchAuthMode(); // reset to login text
-                this.authMode = 'login'; // force login
-            },
-
-            handleAuthSubmit: async function(e) {
-                e.preventDefault();
-                const email = document.getElementById('input-email').value;
-                const password = document.getElementById('input-password').value;
-                const name = document.getElementById('input-name').value;
-                const errorBox = document.getElementById('auth-error');
-                const errorText = document.getElementById('auth-error-text');
-                const btn = document.getElementById('btn-auth-submit');
-
-                errorBox.classList.add('hidden-section');
-                btn.disabled = true;
-                btn.classList.add('opacity-50');
-
-                try {
-                    if (this.authMode === 'login') {
-                        await signInWithEmailAndPassword(auth, email, password);
-                    } else {
-                        const userCred = await createUserWithEmailAndPassword(auth, email, password);
-                        // Update Display Name
-                        await updateProfile(userCred.user, { displayName: name || "Sinh viên" });
-                        // Reload to reflect name
-                        await userCred.user.reload();
-                    }
-                    this.toggleAuthModal(false);
-                } catch (error) {
-                    errorBox.classList.remove('hidden-section');
-                    // Simple error mapping
-                    let msg = error.message;
-                    if(error.code === 'auth/invalid-email') msg = "Email không hợp lệ.";
-                    if(error.code === 'auth/user-not-found') msg = "Tài khoản không tồn tại.";
-                    if(error.code === 'auth/wrong-password') msg = "Sai mật khẩu.";
-                    if(error.code === 'auth/email-already-in-use') msg = "Email này đã được đăng ký.";
-                    if(error.code === 'auth/weak-password') msg = "Mật khẩu quá yếu (tối thiểu 6 ký tự).";
-                    errorText.innerText = msg;
-                } finally {
-                    btn.disabled = false;
-                    btn.classList.remove('opacity-50');
-                }
-            },
-
-            handleLogout: async function() {
-                try {
-                    await signOut(auth);
-                    // Fallback to anonymous to keep app functional
-                    await signInAnonymously(auth);
-                    this.goHome();
-                } catch(e) { console.error(e); }
-            },
-
-            handleLoginSuccess: function(user) {
-                // UI Updates
-                document.getElementById('btn-login-nav').classList.add('hidden-section');
-                document.getElementById('user-profile').classList.remove('hidden-section');
-                document.getElementById('display-name').innerText = user.displayName || "Sinh viên";
-                document.getElementById('user-email').innerText = user.email;
-                document.getElementById('user-avatar').src = `https://ui-avatars.com/api/?name=${user.displayName || 'U'}&background=6C5CE7&color=fff`;
-                
-                // Unlock icons
-                document.getElementById('nav-lock-icon').classList.add('hidden-section');
-            },
-
-            handleLogoutSuccess: function() {
-                document.getElementById('btn-login-nav').classList.remove('hidden-section');
-                document.getElementById('user-profile').classList.add('hidden-section');
-                document.getElementById('nav-lock-icon').classList.remove('hidden-section');
-            },
-
-            // --- NAVIGATION & PROTECTION ---
-            
-            handleProtectedAction: function(target) {
-                const isRealUser = this.user && !this.user.isAnonymous;
-                if (!isRealUser) {
-                    this.toggleAuthModal(true);
-                } else {
-                    if(target === 'game') this.openGameView();
-                }
-            },
-
-            goHome: function() {
-                document.getElementById('home-view').classList.remove('hidden-section');
-                document.getElementById('game-view').classList.add('hidden-section');
-                document.getElementById('lesson-view').classList.add('hidden-section');
-            },
-
-            // --- LESSONS ---
-            renderGrid: function() {
-                document.getElementById('lesson-grid').innerHTML = unitsData.map(u => `
-                    <div onclick="window.app.openLesson(${u.id})" class="lesson-card bg-white p-6 rounded-xl shadow-sm border border-gray-100 cursor-pointer relative overflow-hidden group">
-                        <div class="absolute top-0 right-0 w-20 h-20 bg-purple-50 rounded-bl-full -mr-10 -mt-10 transition group-hover:bg-purple-100"></div>
-                        <div class="w-10 h-10 bg-brand-gradient rounded-lg flex items-center justify-center text-white font-bold mb-4 relative z-10">${u.id}</div>
-                        <h3 class="font-bold text-gray-800 mb-2 group-hover:text-brand">${u.title}</h3>
-                        <p class="text-sm text-gray-500">${u.desc}</p>
-                    </div>
-                `).join('');
-            },
-
-            openLesson: function(id) {
-                const u = unitsData.find(x => x.id === id);
-                if(!u) return;
-                document.getElementById('home-view').classList.add('hidden-section');
-                document.getElementById('lesson-view').classList.remove('hidden-section');
-                window.scrollTo(0,0);
-
-                document.getElementById('lesson-title').innerText = u.title;
-                document.getElementById('essay-content').innerHTML = u.essay;
-                
-                document.getElementById('vocab-table-body').innerHTML = u.vocab.map(v => 
-                    `<tr><td class="px-4 py-2 font-bold">${v.w}</td><td class="px-4 py-2 font-mono text-sm text-gray-500">${v.p}</td><td class="px-4 py-2">${v.m}</td></tr>`
-                ).join('');
-
-                document.getElementById('sidebar-list').innerHTML = unitsData.map(unit => 
-                    `<li onclick="window.app.openLesson(${unit.id})" class="px-2 py-2 rounded cursor-pointer hover:bg-gray-100 ${unit.id===id?'text-brand font-bold bg-purple-50':''}">Unit ${unit.id}</li>`
-                ).join('');
-                
-                this.switchTab('essay');
-            },
-
-            switchTab: function(name) {
-                ['essay', 'vocab'].forEach(t => {
-                    document.getElementById(`tab-${t}`).classList.add('hidden-section');
-                    document.getElementById(`tab-btn-${t}`).classList.remove('border-b-2', 'border-brand', 'text-brand');
-                });
-                document.getElementById(`tab-${name}`).classList.remove('hidden-section');
-                document.getElementById(`tab-btn-${name}`).classList.add('border-b-2', 'border-brand', 'text-brand');
-            },
-
-            // --- GAME LOGIC ---
-            openGameView: function() {
-                document.getElementById('home-view').classList.add('hidden-section');
-                document.getElementById('game-view').classList.remove('hidden-section');
-                // Reset View
-                document.getElementById('game-start').classList.remove('hidden-section');
-                document.getElementById('game-play').classList.add('hidden-section');
-                document.getElementById('game-result').classList.add('hidden-section');
-            },
-
-            renderLeaderboard: function() {
-                document.getElementById('leaderboard-list').innerHTML = mockLeaderboard.map((u, i) => `
-                    <li class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div class="flex items-center">
-                            <span class="w-6 font-bold text-gray-400">${i+1}</span>
-                            <img src="${u.avatar}" class="w-8 h-8 rounded-full mr-3">
-                            <span class="text-sm font-bold text-gray-700">${u.name}</span>
-                        </div>
-                        <span class="text-brand font-bold text-sm">${u.score} pts</span>
-                    </li>
-                `).join('');
-            },
-
-            startGame: function() {
-                // Flatten quizzes
-                let all = [];
-                unitsData.forEach(u => u.quiz.forEach(q => all.push(q)));
-                this.gameQ = all.sort(() => 0.5 - Math.random()).slice(0, 5);
-                this.qIdx = 0;
-                this.score = 0;
-
-                document.getElementById('game-start').classList.add('hidden-section');
-                document.getElementById('game-play').classList.remove('hidden-section');
-                document.getElementById('game-result').classList.add('hidden-section');
-                this.renderQ();
-            },
-
-            renderQ: function() {
-                if (this.qIdx >= this.gameQ.length) {
-                    this.endGame();
+                    `;
                     return;
                 }
-                const q = this.gameQ[this.qIdx];
-                document.getElementById('game-q-curr').innerText = this.qIdx + 1;
-                document.getElementById('game-score').innerText = this.score;
-                document.getElementById('game-question-text').innerText = q.q;
-                document.getElementById('game-feedback').innerText = "";
 
-                document.getElementById('game-options').innerHTML = q.a.map((ans, i) => `
-                    <button onclick="window.app.ans(${i}, ${q.c})" class="ans-btn w-full text-left p-3 rounded-lg border hover:bg-purple-50 hover:border-purple-300 transition">${ans}</button>
-                `).join('');
-            },
-
-            ans: function(sel, corr) {
-                const btns = document.querySelectorAll('.ans-btn');
-                btns.forEach(b => b.disabled = true);
-                const fb = document.getElementById('game-feedback');
+                const q = unit.quiz[currentQuestionIndex];
                 
-                if(sel === corr) {
-                    this.score += 10;
-                    btns[sel].classList.add('bg-green-100', 'border-green-500', 'text-green-700');
-                    fb.innerText = "Chính xác! +10";
-                    fb.classList.add('text-green-600');
-                    fb.classList.remove('text-red-600');
+                main.innerHTML = `
+                    <div class="max-w-2xl mx-auto p-6 mt-10 fade-in">
+                        <div class="mb-6 flex justify-between items-center">
+                            <button onclick="renderUnit(${unitId})" class="text-gray-500 hover:text-gray-800"><i class="fa-solid fa-arrow-left mr-2"></i>Thoát</button>
+                            <span class="bg-purple-100 text-primary px-3 py-1 rounded-full text-xs font-bold">Câu ${currentQuestionIndex + 1}/${unit.quiz.length}</span>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">${q.q}</h3>
+                            
+                            <div class="space-y-3" id="options-container">
+                                ${q.options.map((opt, idx) => `
+                                    <button onclick="checkAnswer(${idx})" class="quiz-option w-full text-left p-4 rounded-xl border-2 border-gray-100 hover:border-primary hover:bg-purple-50 transition duration-200 font-medium text-gray-600" id="opt-${idx}">
+                                        ${opt}
+                                    </button>
+                                `).join('')}
+                            </div>
+
+                            <div id="feedback-area" class="mt-6 hidden">
+                                <div id="feedback-msg" class="p-4 rounded-lg mb-4 font-bold text-center"></div>
+                                <button onclick="nextQuestion()" class="w-full bg-gray-800 text-white py-3 rounded-lg font-bold hover:bg-black">Câu tiếp theo <i class="fa-solid fa-arrow-right ml-2"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            window.checkAnswer = (selectedIndex) => {
+                const q = unit.quiz[currentQuestionIndex];
+                const isCorrect = selectedIndex === q.correct;
+                const container = document.getElementById('options-container');
+                const feedbackArea = document.getElementById('feedback-area');
+                const feedbackMsg = document.getElementById('feedback-msg');
+
+                // Disable all buttons
+                const buttons = container.querySelectorAll('button');
+                buttons.forEach(btn => btn.disabled = true);
+
+                // Style buttons
+                const selectedBtn = document.getElementById(`opt-${selectedIndex}`);
+                const correctBtn = document.getElementById(`opt-${q.correct}`);
+
+                if (isCorrect) {
+                    selectedBtn.classList.remove('border-gray-100', 'hover:border-primary');
+                    selectedBtn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                    feedbackMsg.className = "p-4 rounded-lg mb-4 font-bold text-center bg-green-100 text-green-800";
+                    feedbackMsg.innerHTML = `<i class="fa-solid fa-check-circle mr-2"></i>Chính xác! Xuất sắc.`;
+                    score++;
                 } else {
-                    btns[sel].classList.add('bg-red-100', 'border-red-500', 'text-red-700');
-                    btns[corr].classList.add('bg-green-100', 'border-green-500');
-                    fb.innerText = "Sai rồi!";
-                    fb.classList.add('text-red-600');
-                    fb.classList.remove('text-green-600');
+                    selectedBtn.classList.remove('border-gray-100', 'hover:border-primary');
+                    selectedBtn.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                    
+                    // Show correct answer
+                    correctBtn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+
+                    feedbackMsg.className = "p-4 rounded-lg mb-4 font-bold text-center bg-red-100 text-red-800";
+                    feedbackMsg.innerHTML = `<i class="fa-solid fa-times-circle mr-2"></i>Sai rồi! Đáp án đúng là màu xanh.`;
                 }
 
-                setTimeout(() => {
-                    this.qIdx++;
-                    this.renderQ();
-                }, 1000);
-            },
+                feedbackArea.classList.remove('hidden');
+                
+                // Attach next function globally temporarily so the button can call it
+                window.nextQuestion = () => {
+                    currentQuestionIndex++;
+                    renderQuestion();
+                }
+            };
 
-            endGame: function() {
-                document.getElementById('game-play').classList.add('hidden-section');
-                document.getElementById('game-result').classList.remove('hidden-section');
-                document.getElementById('final-score').innerText = this.score;
-                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-            }
+            renderQuestion();
         };
 
-        // Export logic
-        window.app = appLogic;
-        window.app.init();
+
+        // --- 7. INITIALIZATION & MOBILE MENU ---
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+            }
+        }
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', toggleSidebar);
+
+        // Init
+        renderSidebar();
+        renderHome(); // Start at home
+
     </script>
 </body>
 </html>
-

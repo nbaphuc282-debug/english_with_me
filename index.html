@@ -20,9 +20,10 @@
             --text-light: #6b7280;
             --white: #ffffff;
             --success: #10b981;
-            --warning: #f59e0b; /* Màu vàng cho nút sửa */
+            --warning: #f59e0b; 
             --error: #ef4444;
             --gradient-main: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --gradient-hero: linear-gradient(100deg, #7c3aed 0%, #3b82f6 100%); /* Gradient giống ảnh mẫu */
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --radius: 12px;
@@ -42,7 +43,7 @@
         .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-outline { background: transparent; border: 2px solid var(--primary-color); color: var(--primary-color); }
         .btn-danger { background-color: var(--error); color: white; padding: 5px 10px; font-size: 0.85rem; }
-        .btn-warning { background-color: var(--warning); color: white; padding: 5px 10px; font-size: 0.85rem; } /* New Button Style */
+        .btn-warning { background-color: var(--warning); color: white; padding: 5px 10px; font-size: 0.85rem; }
         .btn-sm { padding: 5px 10px; font-size: 0.85rem; }
         
         .input-group { margin-bottom: 15px; text-align: left; }
@@ -91,8 +92,88 @@
         .card { background: var(--white); border-radius: var(--radius); padding: 25px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
         .section-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; color: var(--text-dark); border-left: 5px solid var(--secondary-color); padding-left: 15px; }
 
-        /* --- SPECIFIC VIEWS --- */
-        /* Lesson Grid */
+        /* --- HERO SECTION (NEW STYLE) --- */
+        .hero-section {
+            background: var(--gradient-hero);
+            border-radius: 20px;
+            padding: 30px 40px;
+            position: relative;
+            overflow: hidden;
+            min-height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.3);
+        }
+
+        /* Decorative Circles */
+        .hero-circle { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.1); z-index: 0; }
+        .hero-circle-1 { width: 300px; height: 300px; top: -50px; left: -50px; }
+        .hero-circle-2 { width: 200px; height: 200px; bottom: -50px; right: 20%; }
+
+        .hero-left {
+            flex: 1;
+            z-index: 2;
+            padding-right: 20px;
+            position: relative;
+        }
+
+        .hero-character-img {
+            position: absolute;
+            left: -20px;
+            bottom: -40px;
+            height: 360px;
+            z-index: 1;
+            pointer-events: none;
+            /* Hide on mobile to prevent clutter */
+        }
+
+        .hero-right {
+            flex: 1.2;
+            z-index: 2;
+            display: flex;
+            gap: 20px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .hero-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            width: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .hero-card:hover { transform: translateY(-8px) scale(1.02); }
+        
+        .hero-card img { width: 70px; height: 70px; object-fit: contain; margin-bottom: 10px; }
+        .hero-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; color: var(--text-dark); }
+        .hero-card p { font-size: 0.85rem; color: var(--text-light); margin-bottom: 15px; }
+        
+        .hero-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        .hero-btn:hover { background: #1d4ed8; }
+        .hero-btn-cyan { background: #06b6d4; }
+        .hero-btn-cyan:hover { background: #0891b2; }
+
+        /* --- LESSON GRID --- */
         .lesson-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .lesson-card { background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); transition: transform 0.2s; border: 1px solid #e5e7eb; display: flex; flex-direction: column; position: relative; }
         .lesson-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: var(--primary-color); }
@@ -152,6 +233,11 @@
             .main-grid { grid-template-columns: 1fr; padding-top: 20px; }
             .sidebar { margin-bottom: 20px; }
             .vocab-row-input { grid-template-columns: 1fr; border-bottom: 1px dashed #ccc; padding-bottom: 10px;}
+            .hero-section { flex-direction: column; padding: 20px; min-height: auto; }
+            .hero-left { width: 100%; margin-bottom: 20px; }
+            .hero-character-img { display: none; } /* Hide 3D char on mobile */
+            .hero-right { justify-content: center; width: 100%; }
+            .hero-card { width: 100%; max-width: 300px; }
         }
     </style>
 </head>
@@ -213,7 +299,7 @@
             <aside class="sidebar">
                 <div id="student-menu" class="hidden">
                     <div class="menu-item active" onclick="navigate('student-lessons')">
-                        <i class="fa-solid fa-book-open"></i> Bài học
+                        <i class="fa-solid fa-book-open"></i> Trang chủ
                     </div>
                     <div class="menu-item" onclick="navigate('student-quiz')">
                         <i class="fa-solid fa-gamepad"></i> Luyện tập (Quiz)
@@ -241,7 +327,34 @@
                 
                 <!-- LESSON LIST (SHARED VIEW) -->
                 <div id="view-student-lessons" class="view-section">
-                    <h2 class="section-title">Danh sách bài học</h2>
+                    
+                    <!-- HERO SECTION -->
+                    <div class="hero-section">
+                        <div class="hero-circle hero-circle-1"></div>
+                        <div class="hero-circle hero-circle-2"></div>
+                        
+                        <div class="hero-left">
+                             <img src="https://cdn3d.iconscout.com/3d/premium/thumb/student-holding-laptop-3d-illustration-download-in-png-blend-fbx-gltf-file-formats--education-logo-learning-pack-school-illustrations-2982541.png" class="hero-character-img" alt="3D Student">
+                        </div>
+                        
+                        <div class="hero-right">
+                            <div class="hero-card">
+                                <img src="https://cdn-icons-png.flaticon.com/512/3413/3413535.png" alt="Courses">
+                                <h3>Các khóa học của tôi</h3>
+                                <p>Tiếp tục học Unit 1</p>
+                                <button class="hero-btn" onclick="scrollToLessons()">Học ngay >></button>
+                            </div>
+                            
+                            <div class="hero-card">
+                                <img src="https://cdn-icons-png.flaticon.com/512/3407/3407037.png" alt="Quiz">
+                                <h3>Các bài thi của tôi</h3>
+                                <p>Thử thách kiến thức</p>
+                                <button class="hero-btn hero-btn-cyan" onclick="navigate('student-quiz')">Luyện tập >></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 class="section-title" id="lesson-anchor">Danh sách bài học</h2>
                     <div id="lesson-list" class="lesson-grid">
                         <!-- Lessons injected via JS -->
                     </div>
@@ -273,7 +386,7 @@
                         <h3>Sẵn sàng chưa?</h3>
                         <button onclick="startQuiz()" class="btn btn-primary">Bắt đầu ngay</button>
                     </div>
-                    <div id="quiz-play-screen" class="hidden quiz-container">
+                    <div id="quiz-play-screen" clasQs="hidden quiz-container">
                         <div class="card">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
                                 <span style="font-weight: bold;">Điểm: <span id="current-score" style="color: var(--primary-color);">0</span></span>
@@ -414,6 +527,12 @@
         const showToast = (msg) => {
             const t = get('toast'); t.textContent = msg; t.classList.add('show');
             setTimeout(() => t.classList.remove('show'), 3000);
+        }
+        
+        // Function for Hero Button
+        window.scrollToLessons = () => {
+            const el = get('lesson-anchor');
+            if(el) el.scrollIntoView({behavior: 'smooth'});
         }
 
         // --- VOCAB INPUT LOGIC (Updated to accept params) ---

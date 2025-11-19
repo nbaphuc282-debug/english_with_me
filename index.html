@@ -3,905 +3,833 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electro Mind - HUST Learning Platform</title>
+    <title>Electro Mind - Electrical Engineering Learning</title>
     
-    <!-- Tailwind CSS (Design System) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FontAwesome (Icons) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts -->
+    <!-- Font chữ Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome cho Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Custom Config for Tailwind -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: '#7c3aed', // Violet-600 based on design
-                        secondary: '#4f46e5', // Indigo-600
-                        accent: '#10b981', // Emerald-500 (Success)
-                        danger: '#ef4444', // Red-500 (Error)
-                    }
-                }
-            }
-        }
-    </script>
-    
     <style>
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --primary-color: #6366f1; /* Màu tím xanh chủ đạo */
+            --secondary-color: #a855f7; /* Màu tím nhạt */
+            --accent-color: #06b6d4; /* Màu xanh cyan */
+            --bg-color: #f3f4f6;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --white: #ffffff;
+            --success: #10b981;
+            --error: #ef4444;
+            --gradient-main: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
         }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #c7c7cc; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a1a1aa; 
-        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-dark); line-height: 1.5; }
         
-        /* Animations */
-        .fade-in {
-            animation: fadeIn 0.3s ease-in-out;
+        /* --- UTILITIES --- */
+        .hidden { display: none !important; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .btn {
+            display: inline-block; padding: 10px 20px; border-radius: 8px; border: none;
+            font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .btn-primary { background: var(--gradient-main); color: var(--white); box-shadow: var(--shadow-md); }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-outline { background: transparent; border: 2px solid var(--primary-color); color: var(--primary-color); }
+        .btn-danger { background-color: var(--error); color: white; }
         
-        .quiz-option:hover {
-            transform: translateX(5px);
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-dark); }
+        .input-field {
+            width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 1rem; transition: border-color 0.2s;
+        }
+        .input-field:focus { outline: none; border-color: var(--primary-color); ring: 2px solid var(--primary-color); }
+
+        /* --- AUTH SCREEN --- */
+        #auth-screen {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            background: url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop') no-repeat center center/cover;
+        }
+        .auth-card {
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 40px;
+            border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .logo-text { font-size: 2rem; font-weight: 800; background: var(--gradient-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .role-switch { display: flex; background: #e5e7eb; border-radius: 8px; padding: 4px; margin-bottom: 20px; }
+        .role-btn { flex: 1; padding: 8px; border-radius: 6px; border: none; background: transparent; font-weight: 600; cursor: pointer; }
+        .role-btn.active { background: var(--white); color: var(--primary-color); box-shadow: var(--shadow-sm); }
+
+        /* --- DASHBOARD LAYOUT --- */
+        header { background: var(--white); box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 100; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; height: 70px; }
+        .nav-logo { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); display: flex; align-items: center; gap: 10px; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-badge { background: #e0e7ff; color: var(--primary-color); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+
+        .main-grid { display: grid; grid-template-columns: 250px 1fr; gap: 30px; padding-top: 30px; padding-bottom: 50px; }
+        
+        /* Sidebar */
+        .sidebar { background: var(--white); border-radius: var(--radius); padding: 20px; height: fit-content; box-shadow: var(--shadow-sm); }
+        .menu-item {
+            display: flex; align-items: center; gap: 10px; padding: 12px 15px;
+            color: var(--text-light); cursor: pointer; border-radius: 8px; margin-bottom: 5px; transition: all 0.2s;
+        }
+        .menu-item:hover, .menu-item.active { background: #eff6ff; color: var(--primary-color); }
+        .menu-item i { width: 20px; text-align: center; }
+
+        /* Content Area */
+        .content-area { min-height: 500px; }
+        .card { background: var(--white); border-radius: var(--radius); padding: 25px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
+        .section-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; color: var(--text-dark); border-left: 5px solid var(--secondary-color); padding-left: 15px; }
+
+        /* --- SPECIFIC VIEWS --- */
+        /* Lesson Grid */
+        .lesson-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .lesson-card { background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); transition: transform 0.2s; border: 1px solid #e5e7eb; display: flex; flex-direction: column; }
+        .lesson-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: var(--primary-color); }
+        .lesson-img { height: 150px; background: var(--gradient-main); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; }
+        .lesson-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .lesson-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; color: var(--text-dark); }
+        .lesson-desc { font-size: 0.9rem; color: var(--text-light); margin-bottom: 15px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;}
+
+        /* Quiz Game */
+        .quiz-container { max-width: 800px; margin: 0 auto; text-align: center; }
+        .question-box { font-size: 1.2rem; font-weight: 600; margin: 30px 0; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .option-btn {
+            padding: 20px; border: 2px solid #e5e7eb; border-radius: 10px; background: var(--white);
+            font-size: 1rem; cursor: pointer; transition: all 0.2s;
+        }
+        .option-btn:hover:not(.disabled) { background: #eff6ff; border-color: var(--primary-color); }
+        .option-btn.correct { background: #d1fae5 !important; border-color: var(--success) !important; color: #065f46; }
+        .option-btn.wrong { background: #fee2e2 !important; border-color: var(--error) !important; color: #991b1b; }
+        
+        /* Leaderboard */
+        .leaderboard-table { width: 100%; border-collapse: collapse; }
+        .leaderboard-table th { text-align: left; padding: 15px; background: #f9fafb; color: var(--text-light); font-size: 0.85rem; text-transform: uppercase; }
+        .leaderboard-table td { padding: 15px; border-bottom: 1px solid #e5e7eb; }
+        .rank-1 { color: #fbbf24; font-weight: bold; }
+        .rank-2 { color: #9ca3af; font-weight: bold; }
+        .rank-3 { color: #b45309; font-weight: bold; }
+
+        /* Form Creator (Teacher) */
+        .form-section { margin-bottom: 20px; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb; }
+
+        /* Loading & Toast */
+        #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 999; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .toast {
+            position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; background: var(--text-dark);
+            color: white; border-radius: 8px; box-shadow: var(--shadow-md); opacity: 0; transition: opacity 0.3s; z-index: 1000;
+        }
+        .toast.show { opacity: 1; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-grid { grid-template-columns: 1fr; padding-top: 20px; }
+            .sidebar { margin-bottom: 20px; }
+            .options-grid { grid-template-columns: 1fr; }
+            .nav-logo span { font-size: 1.2rem; }
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 h-screen flex flex-col overflow-hidden">
+<body>
 
-    <!-- ================= HEADER / NAVBAR ================= -->
-    <header class="bg-white shadow-sm z-20 relative">
-        <div class="container mx-auto px-4 h-16 flex items-center justify-between">
-            <!-- Logo & Mobile Menu Toggle -->
-            <div class="flex items-center gap-4">
-                <button id="mobile-menu-btn" class="lg:hidden text-gray-600 text-xl">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-                <a href="#" onclick="renderHome()" class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-white font-bold text-lg">E</div>
-                    <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">Electro Mind</span>
-                </a>
-            </div>
-
-            <!-- Desktop Navigation -->
-            <nav class="hidden lg:flex items-center gap-8 font-medium text-sm text-gray-600">
-                <a href="#" onclick="renderHome()" class="hover:text-primary transition">Trang chủ</a>
-                <div class="relative group cursor-pointer">
-                    <span class="hover:text-primary transition flex items-center gap-1">Khóa học <i class="fa-solid fa-chevron-down text-xs"></i></span>
-                    <!-- Dropdown Mockup -->
-                    <div class="absolute top-full left-0 w-48 bg-white shadow-lg rounded-md p-2 hidden group-hover:block border border-gray-100">
-                        <div class="p-2 hover:bg-gray-50 rounded cursor-pointer text-primary">Electrical Engineering</div>
-                    </div>
-                </div>
-                <a href="#" onclick="renderPractice()" class="hover:text-primary transition">Luyện tập</a>
-            </nav>
-
-            <!-- Auth Section -->
-            <div id="auth-container" class="flex items-center gap-3">
-                <!-- Loading State -->
-                <div id="auth-loading" class="hidden text-sm text-gray-500">Đang tải...</div>
-
-                <!-- Guest State -->
-                <div id="auth-guest" class="flex items-center gap-3">
-                    <button onclick="openAuthModal('login')" class="text-primary font-medium text-sm hover:underline">Đăng nhập</button>
-                    <button onclick="openAuthModal('register')" class="bg-gradient-to-r from-primary to-secondary text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg shadow-primary/30 hover:shadow-xl transition transform hover:-translate-y-0.5">Đăng ký</button>
-                </div>
-
-                <!-- User State -->
-                <div id="auth-user" class="hidden flex items-center gap-3">
-                    <span id="user-email" class="text-sm font-medium text-gray-700 hidden md:block"></span>
-                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 border border-gray-300">
-                        <i class="fa-regular fa-user"></i>
-                    </div>
-                    <button onclick="handleLogout()" class="text-gray-500 hover:text-danger text-sm" title="Đăng xuất">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- ================= MAIN LAYOUT ================= -->
-    <div class="flex flex-1 overflow-hidden relative">
-        
-        <!-- SIDEBAR (Lesson List) -->
-        <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 flex-shrink-0 absolute lg:static h-full z-10 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 shadow-xl lg:shadow-none">
-            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
-                <h3 class="font-bold text-gray-800">Danh sách bài học</h3>
-                <button class="lg:hidden text-gray-500" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="overflow-y-auto h-[calc(100%-60px)] p-3 space-y-1" id="lesson-list">
-                <!-- Lesson Items will be injected here via JS -->
-            </div>
-        </aside>
-
-        <!-- MAIN CONTENT AREA -->
-        <main class="flex-1 overflow-y-auto bg-slate-50 relative w-full" id="main-content">
-            <!-- Dynamic Content will be injected here -->
-        </main>
-
+    <!-- LOADING SPINNER -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
     </div>
 
-    <!-- ================= AUTH MODAL ================= -->
-    <div id="auth-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative animate-fadeIn">
-            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="toast">Thông báo</div>
+
+    <!-- === 1. AUTHENTICATION SCREEN === -->
+    <section id="auth-screen">
+        <div class="auth-card">
+            <h1 class="logo-text">Electro Mind</h1>
+            <p style="margin-bottom: 20px; color: var(--text-light);">HUST Electrical Engineering</p>
             
-            <h2 id="modal-title" class="text-2xl font-bold text-center mb-6 text-gray-800">Đăng nhập</h2>
-            
-            <form id="auth-form" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" id="email-input" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" placeholder="sinhvien@hust.edu.vn" required>
+            <!-- Role Switcher -->
+            <div class="role-switch">
+                <button class="role-btn active" onclick="switchAuthRole('student')">Sinh viên</button>
+                <button class="role-btn" onclick="switchAuthRole('teacher')">Giáo viên</button>
+            </div>
+
+            <form id="auth-form">
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="email" class="input-field" placeholder="mssv@sis.hust.edu.vn" required>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
-                    <input type="password" id="password-input" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" placeholder="••••••••" required>
+                <div class="input-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" id="password" class="input-field" placeholder="******" required>
                 </div>
-                <div id="auth-error" class="text-danger text-sm text-center hidden"></div>
-                <button type="submit" class="w-full bg-primary text-white py-2.5 rounded-lg font-bold hover:bg-violet-700 transition shadow-lg shadow-primary/30">
-                    <span id="submit-btn-text">Đăng nhập</span>
-                </button>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 10px;">Đăng nhập</button>
+                <button type="button" id="btn-signup" class="btn btn-outline" style="width: 100%;">Đăng ký tài khoản mới</button>
             </form>
-            
-            <p class="text-center mt-4 text-sm text-gray-600">
-                <span id="switch-text">Chưa có tài khoản?</span>
-                <button onclick="switchAuthMode()" id="switch-btn" class="text-primary font-semibold hover:underline">Đăng ký ngay</button>
-            </p>
         </div>
-    </div>
+    </section>
 
-    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <!-- === 2. MAIN APP DASHBOARD (Hidden by default) === -->
+    <section id="app-dashboard" class="hidden">
+        <header>
+            <div class="container navbar">
+                <div class="nav-logo">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Electro Mind</span>
+                </div>
+                <div class="user-info">
+                    <span class="user-badge" id="user-badge">Student</span>
+                    <span id="user-email" style="font-weight: 600; display: none; md:block;">user@email.com</span>
+                    <button onclick="handleLogout()" class="btn btn-outline" style="padding: 5px 10px; font-size: 0.9rem;"><i class="fa-solid fa-right-from-bracket"></i></button>
+                </div>
+            </div>
+        </header>
 
-    <!-- FIREBASE CONFIG & LOGIC -->
+        <div class="container main-grid">
+            <!-- SIDEBAR -->
+            <aside class="sidebar">
+                <!-- Menu cho Student -->
+                <div id="student-menu" class="hidden">
+                    <div class="menu-item active" onclick="navigate('student-lessons')">
+                        <i class="fa-solid fa-book-open"></i> Bài học
+                    </div>
+                    <div class="menu-item" onclick="navigate('student-quiz')">
+                        <i class="fa-solid fa-gamepad"></i> Luyện tập (Quiz)
+                    </div>
+                    <div class="menu-item" onclick="navigate('leaderboard')">
+                        <i class="fa-solid fa-trophy"></i> Bảng xếp hạng
+                    </div>
+                </div>
+
+                <!-- Menu cho Teacher -->
+                <div id="teacher-menu" class="hidden">
+                    <div class="menu-item active" onclick="navigate('teacher-create-lesson')">
+                        <i class="fa-solid fa-pen-to-square"></i> Đăng bài học
+                    </div>
+                    <div class="menu-item" onclick="navigate('teacher-create-quiz')">
+                        <i class="fa-solid fa-circle-question"></i> Tạo câu hỏi
+                    </div>
+                    <div class="menu-item" onclick="navigate('student-lessons')">
+                        <i class="fa-solid fa-eye"></i> Xem bài đăng
+                    </div>
+                </div>
+            </aside>
+
+            <!-- MAIN CONTENT AREA -->
+            <main class="content-area">
+                
+                <!-- VIEW: STUDENT LESSON LIST -->
+                <div id="view-student-lessons" class="view-section">
+                    <h2 class="section-title">Danh sách bài học</h2>
+                    <div id="lesson-list" class="lesson-grid">
+                        <!-- Lessons injected here via JS -->
+                    </div>
+                </div>
+
+                <!-- VIEW: LESSON DETAIL (Khi click vào 1 bài học) -->
+                <div id="view-lesson-detail" class="view-section hidden">
+                    <button onclick="navigate('student-lessons')" class="btn btn-outline" style="margin-bottom: 20px;">&larr; Quay lại</button>
+                    <div class="card">
+                        <h1 id="detail-title" style="color: var(--primary-color); margin-bottom: 10px;">Unit Title</h1>
+                        <div style="border-bottom: 1px solid #eee; margin-bottom: 20px;"></div>
+                        
+                        <h3 style="margin-bottom: 10px;"><i class="fa-solid fa-language"></i> Vocabulary</h3>
+                        <div id="detail-vocab" style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
+                        
+                        <h3 style="margin-bottom: 10px;"><i class="fa-solid fa-file-lines"></i> Content</h3>
+                        <div id="detail-content" style="line-height: 1.8; margin-bottom: 20px; white-space: pre-wrap;"></div>
+                        
+                        <div id="detail-video-container"></div>
+                    </div>
+                </div>
+
+                <!-- VIEW: STUDENT QUIZ GAME -->
+                <div id="view-student-quiz" class="view-section hidden">
+                    <h2 class="section-title">Mini Game: Thử thách kiến thức</h2>
+                    
+                    <div id="quiz-start-screen" class="card text-center" style="text-align: center;">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3407/3407037.png" width="100" style="margin-bottom: 20px;">
+                        <h3>Sẵn sàng chưa?</h3>
+                        <p style="color: var(--text-light); margin-bottom: 20px;">Trả lời càng nhiều câu đúng càng tốt để leo Top!</p>
+                        <button onclick="startQuiz()" class="btn btn-primary">Bắt đầu ngay</button>
+                    </div>
+
+                    <div id="quiz-play-screen" class="hidden quiz-container">
+                        <div class="card">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                                <span style="font-weight: bold;">Điểm: <span id="current-score" style="color: var(--primary-color);">0</span></span>
+                                <span>Câu hỏi: <span id="question-counter">1</span>/10</span>
+                            </div>
+                            <div class="progress-bar" style="width: 100%; height: 6px; background: #eee; border-radius: 3px; margin-bottom: 20px;">
+                                <div id="quiz-progress" style="width: 0%; height: 100%; background: var(--success); border-radius: 3px; transition: width 0.3s;"></div>
+                            </div>
+                            
+                            <div id="question-text" class="question-box">Câu hỏi sẽ hiện ở đây?</div>
+                            
+                            <div id="answers-area" class="options-grid">
+                                <!-- Options buttons -->
+                            </div>
+                            
+                            <div id="feedback-msg" style="margin-top: 20px; font-weight: bold; height: 24px;"></div>
+                            
+                            <button id="btn-next-question" onclick="nextQuestion()" class="btn btn-primary hidden" style="margin-top: 20px;">Câu tiếp theo &rarr;</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: LEADERBOARD -->
+                <div id="view-leaderboard" class="view-section hidden">
+                    <h2 class="section-title">Bảng vàng thành tích</h2>
+                    <div class="card">
+                        <table class="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Hạng</th>
+                                    <th>Sinh viên</th>
+                                    <th>Điểm số</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-body">
+                                <!-- Rows injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- VIEW: TEACHER CREATE LESSON -->
+                <div id="view-teacher-create-lesson" class="view-section hidden">
+                    <h2 class="section-title">Soạn bài giảng mới</h2>
+                    <div class="card">
+                        <form id="create-lesson-form">
+                            <div class="input-group">
+                                <label>Tiêu đề bài học (Unit Name)</label>
+                                <input type="text" id="lesson-title" class="input-field" placeholder="VD: Unit 1: Electrons" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Mô tả ngắn</label>
+                                <input type="text" id="lesson-desc" class="input-field" placeholder="Giới thiệu ngắn gọn..." required>
+                            </div>
+                            <div class="input-group">
+                                <label>Nội dung chi tiết (Essay/Theory)</label>
+                                <textarea id="lesson-content" class="input-field" rows="6" placeholder="Nhập nội dung bài giảng..." required></textarea>
+                            </div>
+                            <div class="input-group">
+                                <label>Từ vựng (Vocabulary) - Mỗi dòng 1 từ</label>
+                                <textarea id="lesson-vocab" class="input-field" rows="4" placeholder="Word, Pronunciation, Meaning"></textarea>
+                                <small style="color: var(--text-light)">Format: Word, /ipa/, Nghĩa (Ví dụ: Atom, /ˈæt.əm/, Nguyên tử)</small>
+                            </div>
+                            <div class="input-group">
+                                <label>Link Video (Youtube Embed URL)</label>
+                                <input type="text" id="lesson-video" class="input-field" placeholder="https://www.youtube.com/embed/...">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Đăng bài</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- VIEW: TEACHER CREATE QUIZ -->
+                <div id="view-teacher-create-quiz" class="view-section hidden">
+                    <h2 class="section-title">Tạo ngân hàng câu hỏi</h2>
+                    <div class="card">
+                        <form id="create-quiz-form">
+                            <div class="input-group">
+                                <label>Câu hỏi</label>
+                                <input type="text" id="quiz-question" class="input-field" placeholder="Nhập câu hỏi..." required>
+                            </div>
+                            
+                            <div class="options-grid" style="margin-bottom: 15px;">
+                                <div class="input-group">
+                                    <label>Đáp án A</label>
+                                    <input type="text" id="opt-a" class="input-field" required>
+                                </div>
+                                <div class="input-group">
+                                    <label>Đáp án B</label>
+                                    <input type="text" id="opt-b" class="input-field" required>
+                                </div>
+                                <div class="input-group">
+                                    <label>Đáp án C</label>
+                                    <input type="text" id="opt-c" class="input-field" required>
+                                </div>
+                                <div class="input-group">
+                                    <label>Đáp án D</label>
+                                    <input type="text" id="opt-d" class="input-field" required>
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label>Đáp án đúng</label>
+                                <select id="correct-opt" class="input-field">
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Lưu câu hỏi</button>
+                        </form>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </section>
+
+    <!-- FIREBASE SDK & LOGIC -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        // Add Firestore Imports
-        import { getFirestore, collection, doc, getDoc, setDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        // 1. IMPORT FIREBASE LIBRARIES
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDoc, getDocs, doc, setDoc, query, orderBy, limit, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // --- 1. CONFIGURATION ---
-        // NOTE: User needs to fill this in!
+        // 2. FIREBASE CONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyBPAQ8jldVTwtB_uAzz0-oGcZiUaJ3NeyU",
             authDomain: "ewmp-abc18.firebaseapp.com",
             projectId: "ewmp-abc18",
             storageBucket: "ewmp-abc18.firebasestorage.app",
             messagingSenderId: "416084778745",
-            appId: "1:416084778745:web:edb8de27952c3007e24c28"
+            appId: "1:416084778745:web:edb8de27952c3007e24c28",
+            measurementId: "G-GVP2MCQNLJ"
         };
 
-        let auth, db;
-
-        // Initialize Firebase safely
-        try {
-            if (firebaseConfig.apiKey) {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-            } else {
-                console.warn("Firebase chưa được cấu hình. Vui lòng điền API Key trong code.");
-            }
-        } catch (e) {
-            console.error("Firebase Error:", e);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // --- MANDATORY: Define App ID and Paths ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const PUBLIC_DATA_PATH = `artifacts/${appId}/public/data`;
+        
+        function getUserProfilePath(userId) {
+            return `artifacts/${appId}/users/${userId}/profile`;
         }
 
-        // --- 2. FIRESTORE HELPERS (Leaderboard & Scoring) ---
+        // 3. GLOBAL STATE
+        let currentUser = null;
+        let currentRole = 'student'; // 'student' or 'teacher'
+        let selectedRoleAuth = 'student'; // For login switch
 
-        // Function to save/update user score
-        window.saveUserScore = async (pointsToAdd) => {
-            if (!auth || !auth.currentUser) return;
-            
-            const userId = auth.currentUser.uid;
-            const userEmail = auth.currentUser.email;
-            const userName = userEmail.split('@')[0]; // Use part before @ as name
-            const userRef = doc(db, "users", userId);
+        // 4. UI HELPERS
+        const get = (id) => document.getElementById(id);
+        const show = (id) => get(id).classList.remove('hidden');
+        const hide = (id) => get(id).classList.add('hidden');
+        const showToast = (msg) => {
+            const t = get('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+        const toggleLoading = (isLoading) => {
+            isLoading ? get('loading-overlay').style.display = 'flex' : get('loading-overlay').style.display = 'none';
+        }
 
-            try {
-                const userSnap = await getDoc(userRef);
-                let currentScore = 0;
-                
-                if (userSnap.exists()) {
-                    currentScore = userSnap.data().score || 0;
+        // 5. NAVIGATION LOGIC
+        window.switchAuthRole = (role) => {
+            selectedRoleAuth = role;
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        window.navigate = (viewId) => {
+            // Hide all views
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+
+            // Show selected view
+            if (viewId === 'student-lessons') {
+                show('view-student-lessons');
+                fetchLessons();
+            } else if (viewId === 'student-quiz') {
+                show('view-student-quiz');
+                hide('quiz-play-screen');
+                show('quiz-start-screen');
+            } else if (viewId === 'leaderboard') {
+                show('view-leaderboard');
+                fetchLeaderboard();
+            } else if (viewId === 'teacher-create-lesson') {
+                show('view-teacher-create-lesson');
+            } else if (viewId === 'teacher-create-quiz') {
+                show('view-teacher-create-quiz');
+            }
+
+            // Highlight sidebar
+            const activeMenu = document.querySelector(`.menu-item[onclick="navigate('${viewId}')"]`);
+            if (activeMenu) activeMenu.classList.add('active');
+        }
+
+        // 6. AUTHENTICATION LOGIC
+        onAuthStateChanged(auth, async (user) => {
+            toggleLoading(true);
+            if (user) {
+                currentUser = user;
+                // Fetch User Role from PRIVATE PATH
+                try {
+                    const userDoc = await getDoc(doc(db, getUserProfilePath(user.uid), "info"));
+                    if (userDoc.exists()) {
+                        currentRole = userDoc.data().role;
+                        setupDashboard(user, currentRole);
+                    } else {
+                        // Fallback: assume student if no profile found
+                        currentRole = 'student';
+                        setupDashboard(user, 'student');
+                    }
+                } catch (e) {
+                    console.error("Error fetching profile:", e);
+                    // Usually happens if user created but profile save failed.
+                    currentRole = 'student';
+                    setupDashboard(user, 'student');
                 }
-
-                const newScore = currentScore + pointsToAdd;
-
-                await setDoc(userRef, {
-                    email: userEmail,
-                    name: userName,
-                    score: newScore,
-                    avatar: userName.substring(0, 2).toUpperCase(),
-                    lastUpdated: new Date()
-                }, { merge: true });
-
-                console.log(`Saved score. New total: ${newScore}`);
-                return newScore;
-            } catch (e) {
-                console.error("Error saving score:", e);
-            }
-        };
-
-        // Function to fetch leaderboard
-        window.fetchLeaderboard = async () => {
-            if (!db) return [];
-            try {
-                const q = query(collection(db, "users"), orderBy("score", "desc"), limit(5));
-                const querySnapshot = await getDocs(q);
-                const leaderboard = [];
-                querySnapshot.forEach((doc) => {
-                    leaderboard.push(doc.data());
-                });
-                return leaderboard;
-            } catch (e) {
-                console.error("Error fetching leaderboard:", e);
-                return [];
-            }
-        };
-
-
-        // --- 3. AUTHENTICATION LOGIC ---
-        
-        window.openAuthModal = (mode) => {
-            const modal = document.getElementById('auth-modal');
-            const title = document.getElementById('modal-title');
-            const btnText = document.getElementById('submit-btn-text');
-            const switchText = document.getElementById('switch-text');
-            const switchBtn = document.getElementById('switch-btn');
-            
-            window.currentAuthMode = mode; 
-            
-            if (mode === 'login') {
-                title.textContent = 'Đăng nhập';
-                btnText.textContent = 'Đăng nhập';
-                switchText.textContent = 'Chưa có tài khoản?';
-                switchBtn.textContent = 'Đăng ký ngay';
             } else {
-                title.textContent = 'Đăng ký tài khoản';
-                btnText.textContent = 'Đăng ký';
-                switchText.textContent = 'Đã có tài khoản?';
-                switchBtn.textContent = 'Đăng nhập';
+                show('auth-screen');
+                hide('app-dashboard');
             }
+            toggleLoading(false);
+        });
+
+        function setupDashboard(user, role) {
+            hide('auth-screen');
+            show('app-dashboard');
+            get('user-email').textContent = user.email;
+            get('user-badge').textContent = role === 'teacher' ? 'Giáo viên' : 'Sinh viên';
             
-            modal.classList.remove('hidden');
-        };
-
-        window.closeAuthModal = () => {
-            document.getElementById('auth-modal').classList.add('hidden');
-            document.getElementById('auth-error').classList.add('hidden');
-            document.getElementById('auth-form').reset();
-        };
-
-        window.switchAuthMode = () => {
-            window.openAuthModal(window.currentAuthMode === 'login' ? 'register' : 'login');
-        };
-
-        window.handleLogout = async () => {
-            if(!auth) return;
-            try {
-                await signOut(auth);
-                alert("Đã đăng xuất thành công!");
-                renderHome(); 
-            } catch (error) {
-                console.error(error);
+            // Show correct sidebar menu
+            if (role === 'teacher') {
+                show('teacher-menu');
+                hide('student-menu');
+                window.navigate('teacher-create-lesson');
+            } else {
+                show('student-menu');
+                hide('teacher-menu');
+                window.navigate('student-lessons');
             }
-        };
+        }
 
-        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+        const authForm = get('auth-form');
+        authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if(!auth) {
-                alert("Vui lòng cấu hình Firebase Config trong code trước!");
-                return;
-            }
-
-            const email = document.getElementById('email-input').value;
-            const password = document.getElementById('password-input').value;
-            const errorDiv = document.getElementById('auth-error');
-            const submitBtn = document.querySelector('#auth-form button[type="submit"]');
-
-            errorDiv.classList.add('hidden');
-            submitBtn.disabled = true;
-            submitBtn.classList.add('opacity-50');
-
+            const email = get('email').value;
+            const password = get('password').value;
+            
+            toggleLoading(true);
             try {
-                if (window.currentAuthMode === 'login') {
-                    await signInWithEmailAndPassword(auth, email, password);
-                } else {
-                    await createUserWithEmailAndPassword(auth, email, password);
-                }
-                window.closeAuthModal();
+                await signInWithEmailAndPassword(auth, email, password);
+                showToast("Đăng nhập thành công!");
             } catch (error) {
-                errorDiv.textContent = getFriendlyErrorMessage(error.code);
-                errorDiv.classList.remove('hidden');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('opacity-50');
+                showToast("Lỗi: " + error.message);
+                toggleLoading(false);
             }
         });
 
-        function getFriendlyErrorMessage(code) {
-            switch(code) {
-                case 'auth/invalid-email': return 'Email không hợp lệ.';
-                case 'auth/user-disabled': return 'Tài khoản đã bị khóa.';
-                case 'auth/user-not-found': return 'Không tìm thấy tài khoản này.';
-                case 'auth/wrong-password': return 'Sai mật khẩu.';
-                case 'auth/email-already-in-use': return 'Email này đã được đăng ký.';
-                case 'auth/weak-password': return 'Mật khẩu phải có ít nhất 6 ký tự.';
-                default: return 'Đã có lỗi xảy ra: ' + code;
-            }
-        }
+        // Signup Logic
+        get('btn-signup').addEventListener('click', async () => {
+            const email = get('email').value;
+            const password = get('password').value;
+            if (!email || !password) return showToast("Vui lòng nhập Email và Mật khẩu");
 
-        if(auth) {
-            onAuthStateChanged(auth, (user) => {
-                window.appState.user = user;
-                updateAuthUI(user);
-            });
-        } else {
-            updateAuthUI(null); 
-        }
-
-        function updateAuthUI(user) {
-            const guestDiv = document.getElementById('auth-guest');
-            const userDiv = document.getElementById('auth-user');
-            const loadingDiv = document.getElementById('auth-loading');
-            const userEmailSpan = document.getElementById('user-email');
-
-            loadingDiv.classList.add('hidden');
-
-            if (user) {
-                guestDiv.classList.add('hidden');
-                userDiv.classList.remove('hidden');
-                userDiv.classList.add('flex');
-                userEmailSpan.textContent = `Xin chào, ${user.email}`;
+            toggleLoading(true);
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
                 
-                const main = document.getElementById('main-content');
-                if (main.querySelector('h2')?.textContent.includes('Khu vực Luyện tập')) {
-                    renderPractice();
-                } else if (main.querySelector('#leaderboard-placeholder')) {
-                    // Reload home to fetch real leaderboard
-                    renderHome();
+                // Save Role to PRIVATE PATH
+                await setDoc(doc(db, getUserProfilePath(user.uid), "info"), {
+                    email: email,
+                    role: selectedRoleAuth,
+                    createdAt: new Date()
+                });
+                
+                showToast("Đăng ký thành công!");
+                // onAuthStateChanged will handle the rest
+            } catch (error) {
+                showToast("Đăng ký lỗi: " + error.message);
+                toggleLoading(false);
+            }
+        });
+
+        window.handleLogout = () => {
+            signOut(auth).then(() => {
+                currentUser = null;
+                showToast("Đã đăng xuất");
+                location.reload();
+            });
+        }
+
+        // 7. TEACHER FUNCTIONS
+        // Create Lesson (PUBLIC DATA)
+        get('create-lesson-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (currentRole !== 'teacher') return;
+
+            toggleLoading(true);
+            try {
+                await addDoc(collection(db, PUBLIC_DATA_PATH, "lessons"), {
+                    title: get('lesson-title').value,
+                    desc: get('lesson-desc').value,
+                    content: get('lesson-content').value,
+                    vocab: get('lesson-vocab').value,
+                    video: get('lesson-video').value,
+                    author: currentUser.email,
+                    createdAt: new Date()
+                });
+                showToast("Đã đăng bài học mới!");
+                get('create-lesson-form').reset();
+            } catch (err) {
+                showToast("Lỗi: " + err.message);
+            }
+            toggleLoading(false);
+        });
+
+        // Create Quiz (PUBLIC DATA)
+        get('create-quiz-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (currentRole !== 'teacher') return;
+
+            toggleLoading(true);
+            try {
+                await addDoc(collection(db, PUBLIC_DATA_PATH, "quizzes"), {
+                    question: get('quiz-question').value,
+                    options: {
+                        A: get('opt-a').value,
+                        B: get('opt-b').value,
+                        C: get('opt-c').value,
+                        D: get('opt-d').value
+                    },
+                    correct: get('correct-opt').value,
+                    createdAt: new Date()
+                });
+                showToast("Đã thêm câu hỏi!");
+                get('create-quiz-form').reset();
+            } catch (err) {
+                showToast("Lỗi: " + err.message);
+            }
+            toggleLoading(false);
+        });
+
+        // 8. STUDENT FUNCTIONS
+        // Fetch Lessons (PUBLIC DATA)
+        async function fetchLessons() {
+            toggleLoading(true);
+            const listContainer = get('lesson-list');
+            listContainer.innerHTML = '';
+            
+            try {
+                const q = query(collection(db, PUBLIC_DATA_PATH, "lessons"), orderBy("createdAt", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    listContainer.innerHTML = '<p>Chưa có bài học nào.</p>';
                 }
-            } else {
-                guestDiv.classList.remove('hidden');
-                userDiv.classList.add('hidden');
-                userDiv.classList.remove('flex');
+
+                querySnapshot.forEach((doc) => {
+                    const d = doc.data();
+                    // Create Card UI
+                    const card = document.createElement('div');
+                    card.className = 'lesson-card';
+                    card.innerHTML = `
+                        <div class="lesson-img">
+                            <i class="fa-solid fa-atom"></i>
+                        </div>
+                        <div class="lesson-body">
+                            <div class="lesson-title">${d.title}</div>
+                            <div class="lesson-desc">${d.desc}</div>
+                            <button class="btn btn-outline" style="width:100%" onclick="openLesson('${doc.id}')">Học ngay</button>
+                        </div>
+                    `;
+                    listContainer.appendChild(card);
+                });
+            } catch (err) {
+                console.error(err);
             }
-        }
-    </script>
-
-    <!-- CONTENT DATA & UI LOGIC -->
-    <script>
-        // --- 2. GLOBAL STATE ---
-        window.appState = {
-            user: null,
-            currentUnitId: null,
-            quizScore: 0
-        };
-
-        // --- 4. COURSE DATA ---
-        
-        const courseData = [
-            {
-                id: 1,
-                title: "Unit 1: Electrons",
-                icon: "fa-atom",
-                desc: "Understanding the basic building blocks of matter.",
-                vocabulary: [
-                    { word: "Electric charge", ipa: "/ɪˈlek.trɪk ,tʃɑːdʒ/", mean: "Điện tích" },
-                    { word: "Positive charge", ipa: "/ˈpɒz.ə.tɪv ,tʃɑːdʒ/", mean: "Điện tích dương" },
-                    { word: "Negative charge", ipa: "/ˈneɡ.ə.tɪv,tʃɑːdʒ/", mean: "Điện tích âm" },
-                    { word: "Nucleus", ipa: "/ˈnjuː.kli.əs/", mean: "Hạt nhân" },
-                    { word: "Neutron", ipa: "/ˈnjuː.trɒn/", mean: "Nơ-t-rông" },
-                    { word: "Isotopes", ipa: "/ˈaɪ.sə.təʊp/", mean: "Đồng vị" }
-                ],
-                essay: `
-                    <h4 class="font-bold text-lg mb-2">Atomic Structure</h4>
-                    <p class="mb-3">Atoms consist of an extremely small, positively charged nucleus surrounded by a cloud of negatively charged electrons. Although typically the nucleus is less than one ten-thousandth the size of the atom, the nucleus contains more that 99.9% of the mass of the atom.</p>
-                    <p class="mb-3">Nuclei are made of positively charged protons and electrically neutral neutrons held together by a nuclear force. This force is much stronger than the electrostatic force that binds electrons to the nucleus, but its range is limited to distances of the order of 1 x 10-15 meters.</p>
-                    <div class="my-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500 italic">
-                        "Atoms of the same element can have different number of neutrons and they are called isotopes of that element. Example: hydrogen-1, hydrogen-2 (deuterium)."
-                    </div>
-                `,
-                quiz: [
-                    { q: "What is the approximate fraction of an atom’s mass found in the nucleus?", options: ["About 10%", "About 50%", "More than 99.9%", "Less than 1%"], correct: 2 },
-                    { q: "Which particles are found in the nucleus?", options: ["Electrons only", "Protons and electrons", "Protons and neutrons", "Neutrons and electrons"], correct: 2 },
-                    { q: "What type of force holds protons and neutrons together?", options: ["Gravitational", "Nuclear force", "Electrostatic", "Magnetic"], correct: 1 },
-                    { q: "The atomic number (Z) is defined as the number of:", options: ["Neutrons", "Protons", "Electrons", "Nucleons"], correct: 1 },
-                    { q: "Isotopes of an element have the same number of:", options: ["Neutrons", "Protons", "Electrons", "Atomic mass"], correct: 1 }
-                ]
-            },
-            {
-                id: 2,
-                title: "Unit 2: Electric Current",
-                icon: "fa-bolt",
-                desc: "Flow of charge, carriers, and circuits.",
-                vocabulary: [
-                    { word: "Current", ipa: "/ˈkʌr.ənt/", mean: "Dòng điện" },
-                    { word: "Charge carrier", ipa: "/tʃɑːdʒ ˈkær.i.ər/", mean: "Hạt mang điện" },
-                    { word: "Conductor", ipa: "/kənˈdʌk.tər/", mean: "Vật dẫn điện" },
-                    { word: "Drift velocity", ipa: "/drɪft vəˈlɒs.ə.ti/", mean: "Vận tốc trôi" }
-                ],
-                essay: `
-                    <h4 class="font-bold text-lg mb-2">Nature of Electric Current</h4>
-                    <p class="mb-3">When a battery is connected to a bulb to make a complete circuit, there is an electric current everywhere in the circuit. Something flows steadily. That thing is charge.</p>
-                    <p>In metallic wires, the electrons are the moving charged particles. They are simply part of the atoms that make up the battery, wires and bulb. The current is the same at each point in the single circuit loop – there are no leaks!</p>
-                `,
-                quiz: [
-                    { q: "What flows steadily in a complete electric circuit?", options: ["Energy", "Charge", "Heat", "Waves"], correct: 1 },
-                    { q: "In metallic wires, the charge carriers are:", options: ["Positive ions", "Negative electrons", "Protons", "Neutrons"], correct: 1 },
-                    { q: "Where is the current the same in a series circuit?", options: ["Near battery", "Near bulb", "Everywhere", "Nowhere"], correct: 2 }
-                ]
-            },
-            {
-                id: 3,
-                title: "Unit 3: Cells and Batteries",
-                icon: "fa-battery-full",
-                desc: "Primary cells, secondary cells, and applications.",
-                vocabulary: [
-                     { word: "Battery", ipa: "/ˈbӕtəri/", mean: "Pin/Ắc quy" },
-                     { word: "Rechargeable", ipa: "/riːˈtʃɑː.dʒə.bəl/", mean: "Có thể sạc lại" },
-                     { word: "Electrode", ipa: "/iˈlektrəud/", mean: "Điện cực" }
-                ],
-                essay: "<p>An Electric Cell is a power-generating device that converts stored chemical energy into electrical energy. A battery is a combination of cells connected in series or parallel.</p>",
-                quiz: [
-                    { q: "Which type of cell cannot be recharged?", options: ["Primary cell", "Secondary cell", "Fuel cell", "Reserve cell"], correct: 0 },
-                    { q: "A battery is defined as:", options: ["A single cell", "A combination of cells", "A generator", "An insulator"], correct: 1 }
-                ]
-            },
-            { id: 4, title: "Unit 4: Sources of Power", icon: "fa-solar-panel", desc: "Generation, transmission, and renewables.", vocabulary: [], essay: "<p>Content for Unit 4...</p>", quiz: [] },
-            { id: 5, title: "Unit 5: Mains Electricity", icon: "fa-plug", desc: "AC/DC, safety, plugs and fuses.", vocabulary: [], essay: "<p>Content for Unit 5...</p>", quiz: [] },
-            { id: 6, title: "Unit 6: Electricity & Magnetism", icon: "fa-magnet", desc: "Fields, flux, and electromagnetism.", vocabulary: [], essay: "<p>Content for Unit 6...</p>", quiz: [] },
-            { id: 7, title: "Unit 7: Resistors", icon: "fa-microchip", desc: "Ohm's law, types of resistors.", vocabulary: [], essay: "<p>Content for Unit 7...</p>", quiz: [] },
-            { id: 8, title: "Unit 8: Capacitors", icon: "fa-layer-group", desc: "Storing charge, dielectrics.", vocabulary: [], essay: "<p>Content for Unit 8...</p>", quiz: [] },
-            { id: 9, title: "Unit 9: Inductors", icon: "fa-ring", desc: "Magnetic energy storage, coils.", vocabulary: [], essay: "<p>Content for Unit 9...</p>", quiz: [] },
-            { id: 10, title: "Unit 10: Semiconductors", icon: "fa-memory", desc: "Diodes, P-N junctions, LEDs.", vocabulary: [], essay: "<p>Content for Unit 10...</p>", quiz: [] },
-        ];
-
-        // --- 5. UI RENDERING LOGIC ---
-
-        function renderSidebar() {
-            const list = document.getElementById('lesson-list');
-            list.innerHTML = courseData.map(unit => `
-                <div onclick="renderUnit(${unit.id})" class="cursor-pointer p-3 rounded-lg hover:bg-violet-50 group transition flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition text-xs">
-                        <i class="fa-solid ${unit.icon}"></i>
-                    </div>
-                    <div>
-                        <p class="text-sm font-semibold text-gray-700 group-hover:text-primary">${unit.title}</p>
-                        <p class="text-xs text-gray-400 truncate w-32">${unit.desc}</p>
-                    </div>
-                </div>
-            `).join('');
+            toggleLoading(false);
         }
 
-        // Render Landing Page / Dashboard
-        window.renderHome = () => {
-            const main = document.getElementById('main-content');
-            window.appState.currentUnitId = null;
-            
-            document.getElementById('sidebar').classList.add('-translate-x-full');
-
-            main.innerHTML = `
-                <!-- Hero Banner -->
-                <div class="bg-gradient-to-r from-primary to-secondary text-white p-8 md:p-12 relative overflow-hidden">
-                    <div class="relative z-10 max-w-2xl">
-                        <h1 class="text-3xl md:text-4xl font-bold mb-4">Học Tiếng Anh chuyên ngành Điện - Điện Tử</h1>
-                        <p class="text-blue-100 mb-6 text-lg">Nền tảng hỗ trợ sinh viên HUST (FL1 & FL2) nắm vững từ vựng và kiến thức chuyên ngành.</p>
-                        ${!window.appState.user ? 
-                            `<button onclick="openAuthModal('login')" class="bg-white text-primary px-6 py-3 rounded-full font-bold hover:bg-gray-100 transition shadow-lg">Bắt đầu ngay >></button>` : 
-                            `<button onclick="renderUnit(1)" class="bg-accent text-white px-6 py-3 rounded-full font-bold hover:bg-emerald-600 transition shadow-lg">Tiếp tục học Unit 1 >></button>`
-                        }
-                    </div>
-                    <div class="absolute right-0 bottom-0 opacity-20 transform translate-x-1/4 translate-y-1/4">
-                         <i class="fa-solid fa-atom text-[300px]"></i>
-                    </div>
-                </div>
-
-                <div class="p-6 md:p-8 max-w-6xl mx-auto">
-                    <!-- Stats / Features -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-                            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl"><i class="fa-solid fa-book-open"></i></div>
-                            <div><h4 class="font-bold">10 Unit</h4><p class="text-sm text-gray-500">Kiến thức chuẩn</p></div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-                            <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xl"><i class="fa-solid fa-gamepad"></i></div>
-                            <div><h4 class="font-bold">Gamification</h4><p class="text-sm text-gray-500">Vừa học vừa chơi</p></div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-                            <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-xl"><i class="fa-solid fa-trophy"></i></div>
-                            <div><h4 class="font-bold">Xếp hạng</h4><p class="text-sm text-gray-500">Thi đua thành tích</p></div>
-                        </div>
-                    </div>
-
-                    <!-- Leaderboard Section -->
-                    <div id="leaderboard-placeholder">
-                        ${window.appState.user ? 
-                            '<div class="bg-white p-6 rounded-xl shadow-sm text-center text-gray-500">Đang tải bảng xếp hạng...</div>' : 
-                            ''
-                        }
-                    </div>
-                </div>
-            `;
-
-            if(window.appState.user) {
-                loadLeaderboardUI();
-            }
-        };
-
-        async function loadLeaderboardUI() {
-            const container = document.getElementById('leaderboard-placeholder');
-            if(!container) return;
-
-            // Use window function to fetch data
-            const data = window.fetchLeaderboard ? await window.fetchLeaderboard() : [];
-            
-            if (data.length === 0) {
-                container.innerHTML = `
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 text-center text-gray-500">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">Bảng Vàng Thành Tích</h3>
-                        <p>Chưa có dữ liệu hoặc chưa kết nối Database.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = `
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden fade-in">
-                    <div class="bg-yellow-50 p-4 border-b border-yellow-100 flex justify-between items-center">
-                        <h3 class="text-lg font-bold text-yellow-800"><i class="fa-solid fa-crown mr-2"></i>Top Sinh Viên Xuất Sắc</h3>
-                        <span class="text-xs font-semibold bg-yellow-200 text-yellow-800 px-2 py-1 rounded">Realtime</span>
-                    </div>
-                    <div class="divide-y divide-gray-100">
-                        ${data.map((u, index) => `
-                            <div class="flex items-center justify-between p-4 hover:bg-gray-50">
-                                <div class="flex items-center gap-4">
-                                    <div class="font-bold ${index < 3 ? 'text-yellow-500 text-xl' : 'text-gray-400'} w-8 text-center">
-                                        ${index === 0 ? '<i class="fa-solid fa-trophy"></i>' : index + 1}
-                                    </div>
-                                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center text-sm font-bold text-gray-600">
-                                        ${u.avatar || '??'}
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-gray-800">${u.name || u.email}</p>
-                                        <p class="text-xs text-gray-400">Sinh viên chăm chỉ</p>
-                                    </div>
-                                </div>
-                                <div class="font-bold text-primary text-lg">${u.score} pts</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        window.renderPractice = () => {
-            const main = document.getElementById('main-content');
-            document.getElementById('sidebar').classList.add('-translate-x-full');
-
-            if (!window.appState.user) {
-                 main.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-full p-6 text-center fade-in">
-                        <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center text-4xl text-gray-400 mb-6">
-                            <i class="fa-solid fa-lock"></i>
-                        </div>
-                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Khu vực Luyện tập</h2>
-                        <p class="text-gray-500 mb-6 max-w-md">Vui lòng đăng nhập để truy cập.</p>
-                        <button onclick="openAuthModal('login')" class="bg-primary text-white px-6 py-2.5 rounded-full font-bold shadow-lg hover:bg-violet-700 transition">
-                            Đăng nhập ngay
-                        </button>
-                    </div>
-                 `;
-                 return;
-            }
-
-            main.innerHTML = `
-                <div class="max-w-5xl mx-auto p-6 md:p-10 fade-in">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Khu vực Luyện tập</h2>
+        // Open Lesson Detail
+        window.openLesson = async (lessonId) => {
+            toggleLoading(true);
+            try {
+                const docRef = doc(db, PUBLIC_DATA_PATH, "lessons", lessonId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
                     
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <!-- Mixed Quiz Card -->
-                        <div onclick="startMixedQuiz()" class="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl p-8 text-white shadow-xl transform hover:scale-[1.02] transition duration-300 cursor-pointer relative overflow-hidden group">
-                            <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition"><i class="fa-solid fa-shuffle text-9xl"></i></div>
-                            <div class="relative z-10">
-                                <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center text-2xl mb-6 backdrop-blur-sm">
-                                    <i class="fa-solid fa-brain"></i>
-                                </div>
-                                <h3 class="text-2xl font-bold mb-3">Ôn tập Tổng hợp</h3>
-                                <p class="text-indigo-100 mb-6 leading-relaxed">Hệ thống sẽ chọn ngẫu nhiên 10 câu hỏi.</p>
-                                <button class="bg-white text-primary px-6 py-2.5 rounded-full font-bold shadow-md hover:bg-indigo-50 transition">Bắt đầu ngay <i class="fa-solid fa-arrow-right ml-2"></i></button>
-                            </div>
-                        </div>
+                    hide('view-student-lessons');
+                    show('view-lesson-detail');
+                    
+                    get('detail-title').textContent = data.title;
+                    get('detail-content').textContent = data.content;
+                    
+                    // Parse Vocab
+                    const vocabHtml = data.vocab ? data.vocab.split('\n').map(line => `<div style="padding:5px 0; border-bottom:1px dashed #ddd">${line}</div>`).join('') : 'Không có từ vựng.';
+                    get('detail-vocab').innerHTML = vocabHtml;
 
-                        <!-- Topic Selection -->
-                        <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 flex flex-col">
-                            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-filter text-primary"></i> Chọn chủ đề cụ thể</h3>
-                            <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 max-h-[300px]">
-                                ${courseData.map(u => `
-                                    <div onclick="startQuiz(${u.id})" class="p-4 rounded-xl border border-gray-100 hover:bg-purple-50 hover:border-primary/30 cursor-pointer flex items-center justify-between transition group">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-xs group-hover:bg-primary group-hover:text-white transition">
-                                                <i class="fa-solid ${u.icon}"></i>
-                                            </div>
-                                            <span class="font-medium text-gray-700 group-hover:text-primary transition">${u.title}</span>
-                                        </div>
-                                        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-primary text-sm transition"></i>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        };
-
-        window.renderUnit = (unitId) => {
-            window.appState.currentUnitId = unitId;
-            const unit = courseData.find(u => u.id === unitId);
-            const main = document.getElementById('main-content');
-
-            document.getElementById('sidebar').classList.add('-translate-x-full');
-
-            main.innerHTML = `
-                <div class="max-w-4xl mx-auto p-6 pb-24 fade-in">
-                    <div class="mb-8 border-b pb-4">
-                        <div class="flex items-center gap-2 text-sm text-primary font-semibold mb-2">
-                            <span onclick="renderHome()" class="cursor-pointer hover:underline">Trang chủ</span> / <span>${unit.title}</span>
-                        </div>
-                        <h2 class="text-3xl font-bold text-gray-900">${unit.title}</h2>
-                        <p class="text-gray-500 mt-2">${unit.desc}</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-2 space-y-8">
-                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                                <div class="bg-blue-50 px-6 py-3 border-b border-blue-100">
-                                    <h3 class="font-bold text-blue-800"><i class="fa-solid fa-language mr-2"></i>Vocabulary</h3>
-                                </div>
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-sm text-left">
-                                        <thead class="text-xs text-gray-500 uppercase bg-gray-50">
-                                            <tr>
-                                                <th class="px-6 py-3">Word</th>
-                                                <th class="px-6 py-3">Pronunciation</th>
-                                                <th class="px-6 py-3">Meaning</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-gray-100">
-                                            ${unit.vocabulary.length ? unit.vocabulary.map(v => `
-                                                <tr class="hover:bg-gray-50">
-                                                    <td class="px-6 py-4 font-medium text-gray-900">${v.word}</td>
-                                                    <td class="px-6 py-4 font-mono text-gray-500 text-xs">${v.ipa}</td>
-                                                    <td class="px-6 py-4 text-gray-600">${v.mean}</td>
-                                                </tr>
-                                            `).join('') : '<tr><td colspan="3" class="p-4 text-center text-gray-400">Đang cập nhật...</td></tr>'}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-gray-700 leading-relaxed">
-                                ${unit.essay}
-                            </div>
-                        </div>
-
-                        <div class="lg:col-span-1">
-                            <div class="sticky top-4 space-y-6">
-                                <div class="bg-white rounded-xl shadow-lg border border-purple-100 overflow-hidden relative">
-                                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
-                                    <div class="p-6 text-center">
-                                        <div class="w-16 h-16 bg-purple-100 text-primary rounded-full flex items-center justify-center text-2xl mx-auto mb-4 animate-bounce">
-                                            <i class="fa-solid fa-puzzle-piece"></i>
-                                        </div>
-                                        <h3 class="text-xl font-bold text-gray-800 mb-2">Ôn tập nhanh</h3>
-                                        <p class="text-sm text-gray-500 mb-6">Kiểm tra kiến thức của bạn qua ${unit.quiz.length} câu hỏi trắc nghiệm.</p>
-                                        
-                                        ${window.appState.user ? 
-                                            `<button onclick="startQuiz(${unitId})" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-violet-700 transition shadow-lg shadow-primary/30">Bắt đầu ngay</button>` :
-                                            `<div class="bg-gray-50 p-3 rounded text-sm text-gray-500 border border-gray-200">
-                                                <i class="fa-solid fa-lock mr-1"></i> Đăng nhập để làm bài tập
-                                            </div>`
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+                    // Video
+                    if(data.video) {
+                        get('detail-video-container').innerHTML = `<iframe width="100%" height="400" src="${data.video}" frameborder="0" allowfullscreen style="border-radius:8px;"></iframe>`;
+                    } else {
+                         get('detail-video-container').innerHTML = '';
+                    }
+                }
+            } catch (err) {
+                showToast("Lỗi tải bài học");
+            }
+            toggleLoading(false);
         }
 
-        // --- 6. GAMIFICATION LOGIC (Updated to Save Score) ---
+        // 9. QUIZ GAME LOGIC
+        let quizQuestions = [];
+        let currentQIndex = 0;
+        let score = 0;
 
-        window.runGenericQuiz = (questions, title, onExitCallback) => {
-             const main = document.getElementById('main-content');
-             
-             window.quizState = {
-                 questions: questions,
-                 onExit: onExitCallback,
-                 currentIndex: 0,
-                 score: 0
-             };
+        window.startQuiz = async () => {
+            toggleLoading(true);
+            try {
+                // Get random 10 questions
+                const qSnap = await getDocs(collection(db, PUBLIC_DATA_PATH, "quizzes"));
+                let allQ = [];
+                qSnap.forEach(doc => allQ.push({id: doc.id, ...doc.data()}));
+                
+                if (allQ.length === 0) {
+                    showToast("Chưa có câu hỏi nào!");
+                    toggleLoading(false);
+                    return;
+                }
 
-             const renderQuestion = () => {
-                 if (window.quizState.currentIndex >= questions.length) {
-                     // Finish Screen Logic
-                     const totalScore = window.quizState.score * 10; // 10 points per question
-
-                     // Trigger Save to Firestore
-                     if (window.saveUserScore) {
-                         window.saveUserScore(totalScore);
-                     }
-
-                     main.innerHTML = `
-                        <div class="min-h-full flex items-center justify-center p-4 fade-in">
-                            <div class="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md w-full relative overflow-hidden">
-                                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-secondary"></div>
-                                <div class="text-6xl mb-4 animate-bounce">🎉</div>
-                                <h2 class="text-2xl font-bold text-gray-800 mb-2">Hoàn thành!</h2>
-                                <p class="text-gray-600 mb-6">Bạn trả lời đúng <span class="text-primary font-bold text-xl">${window.quizState.score}/${questions.length}</span> câu.</p>
-                                
-                                <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                                    <p class="text-sm text-green-800 font-medium">Điểm cộng vào bảng vàng</p>
-                                    <p class="text-3xl font-bold text-green-600">+${totalScore}</p>
-                                </div>
-
-                                <div class="flex gap-3 justify-center">
-                                    <button onclick="quizState.onExit()" class="px-6 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-violet-700 shadow-lg shadow-primary/30 transition">Quay lại</button>
-                                </div>
-                            </div>
-                        </div>
-                     `;
-                     return;
-                 }
-
-                 const q = questions[window.quizState.currentIndex];
-                 
-                 main.innerHTML = `
-                    <div class="max-w-2xl mx-auto p-6 mt-10 fade-in">
-                        <div class="mb-6 flex justify-between items-center">
-                            <button onclick="quizState.onExit()" class="text-gray-500 hover:text-gray-800 font-medium"><i class="fa-solid fa-arrow-left mr-2"></i>Thoát</button>
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm text-gray-500 font-medium">${title}</span>
-                                <span class="bg-purple-100 text-primary px-3 py-1 rounded-full text-xs font-bold">Câu ${window.quizState.currentIndex + 1}/${questions.length}</span>
-                            </div>
-                        </div>
-
-                        <div class="w-full bg-gray-200 rounded-full h-1.5 mb-6">
-                            <div class="bg-primary h-1.5 rounded-full transition-all duration-500" style="width: ${((window.quizState.currentIndex + 1) / questions.length) * 100}%"></div>
-                        </div>
-
-                        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-                            <h3 class="text-xl font-bold text-gray-800 mb-6 leading-relaxed">${q.q}</h3>
-                            
-                            <div class="space-y-3" id="options-container">
-                                ${q.options.map((opt, idx) => `
-                                    <button onclick="handleAnswerCheck(${idx})" class="quiz-option w-full text-left p-4 rounded-xl border-2 border-gray-100 hover:border-primary hover:bg-purple-50 transition duration-200 font-medium text-gray-600" id="opt-${idx}">
-                                        <span class="inline-block w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-xs text-center leading-6 mr-2 border border-gray-200 font-bold">${String.fromCharCode(65+idx)}</span> ${opt}
-                                    </button>
-                                `).join('')}
-                            </div>
-
-                            <div id="feedback-area" class="mt-6 hidden animate-fadeIn">
-                                <div id="feedback-msg" class="p-4 rounded-lg mb-4 font-bold text-center"></div>
-                                <button onclick="handleNextQuestion()" class="w-full bg-gray-900 text-white py-3 rounded-lg font-bold hover:bg-black transition flex items-center justify-center gap-2">Câu tiếp theo <i class="fa-solid fa-arrow-right"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                 `;
-             };
-             
-             window.handleAnswerCheck = (selectedIndex) => {
-                 const q = window.quizState.questions[window.quizState.currentIndex];
-                 const isCorrect = selectedIndex === q.correct;
-                 const container = document.getElementById('options-container');
-                 const feedbackArea = document.getElementById('feedback-area');
-                 const feedbackMsg = document.getElementById('feedback-msg');
-
-                 const buttons = container.querySelectorAll('button');
-                 buttons.forEach(btn => btn.disabled = true);
-
-                 const selectedBtn = document.getElementById(`opt-${selectedIndex}`);
-                 const correctBtn = document.getElementById(`opt-${q.correct}`);
-
-                 if (isCorrect) {
-                     selectedBtn.classList.remove('border-gray-100', 'hover:border-primary', 'text-gray-600');
-                     selectedBtn.classList.add('bg-green-50', 'border-green-500', 'text-green-800');
-                     selectedBtn.querySelector('span').classList.add('bg-green-200', 'text-green-800', 'border-green-300');
-                     
-                     feedbackMsg.className = "p-3 rounded-lg mb-4 font-bold text-center bg-green-100 text-green-800 border border-green-200";
-                     feedbackMsg.innerHTML = `<i class="fa-solid fa-check-circle mr-2"></i>Chính xác!`;
-                     window.quizState.score++;
-                 } else {
-                     selectedBtn.classList.remove('border-gray-100', 'hover:border-primary', 'text-gray-600');
-                     selectedBtn.classList.add('bg-red-50', 'border-red-500', 'text-red-800');
-                     selectedBtn.querySelector('span').classList.add('bg-red-200', 'text-red-800', 'border-red-300');
-                     
-                     correctBtn.classList.remove('border-gray-100', 'text-gray-600');
-                     correctBtn.classList.add('bg-green-50', 'border-green-500', 'text-green-800');
-                     correctBtn.querySelector('span').classList.add('bg-green-200', 'text-green-800', 'border-green-300');
-
-                     feedbackMsg.className = "p-3 rounded-lg mb-4 font-bold text-center bg-red-100 text-red-800 border border-red-200";
-                     feedbackMsg.innerHTML = `<i class="fa-solid fa-circle-xmark mr-2"></i>Sai rồi!`;
-                 }
-
-                 feedbackArea.classList.remove('hidden');
-             };
-
-             window.handleNextQuestion = () => {
-                 window.quizState.currentIndex++;
-                 renderQuestion();
-             }
-
-             renderQuestion();
-        };
-
-        // 1. Start Unit Quiz
-        window.startQuiz = (unitId) => {
-            const unit = courseData.find(u => u.id === unitId);
-            if (!unit || unit.quiz.length === 0) {
-                alert("Bài tập cho unit này đang được cập nhật.");
-                return;
+                // Shuffle and take 10
+                quizQuestions = allQ.sort(() => 0.5 - Math.random()).slice(0, 10);
+                currentQIndex = 0;
+                score = 0;
+                
+                hide('quiz-start-screen');
+                show('quiz-play-screen');
+                renderQuestion();
+            } catch (err) {
+                showToast("Lỗi tải câu hỏi");
             }
-            runGenericQuiz(unit.quiz, unit.title, () => renderUnit(unitId));
-        };
+            toggleLoading(false);
+        }
 
-        // 2. Start Mixed Quiz
-        window.startMixedQuiz = () => {
-            if (!window.appState.user) {
-                openAuthModal('login');
-                return;
-            }
+        function renderQuestion() {
+            const q = quizQuestions[currentQIndex];
+            get('current-score').textContent = score;
+            get('question-counter').textContent = currentQIndex + 1;
+            get('question-text').textContent = q.question;
             
-            let allQuestions = [];
-            courseData.forEach(u => {
-                if(u.quiz && u.quiz.length > 0) {
-                    allQuestions = [...allQuestions, ...u.quiz];
+            // Update progress bar
+            const progressPercent = ((currentQIndex) / quizQuestions.length) * 100;
+            get('quiz-progress').style.width = `${progressPercent}%`;
+
+            const area = get('answers-area');
+            area.innerHTML = '';
+            get('feedback-msg').textContent = '';
+            hide('btn-next-question');
+
+            ['A', 'B', 'C', 'D'].forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<b>${opt}.</b> ${q.options[opt]}`;
+                btn.onclick = () => checkAnswer(opt, q.correct, btn);
+                area.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected, correct, btnElement) {
+            // Disable all buttons
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => {
+                b.classList.add('disabled');
+                b.onclick = null;
+                // Highlight correct answer anyway
+                if (b.innerHTML.includes(`<b>${correct}.</b>`)) {
+                    b.classList.add('correct');
                 }
             });
 
-            if (allQuestions.length === 0) {
-                alert("Hệ thống đang cập nhật dữ liệu câu hỏi.");
-                return;
+            if (selected === correct) {
+                score += 10;
+                get('current-score').textContent = score;
+                get('feedback-msg').textContent = "Chính xác! +10 điểm";
+                get('feedback-msg').style.color = "var(--success)";
+            } else {
+                btnElement.classList.add('wrong');
+                get('feedback-msg').textContent = "Sai rồi!";
+                get('feedback-msg').style.color = "var(--error)";
             }
 
-            const shuffled = allQuestions.sort(() => 0.5 - Math.random());
-            const selectedQuestions = shuffled.slice(0, 10);
+            show('btn-next-question');
+        }
 
-            runGenericQuiz(selectedQuestions, "Bài thi Tổng hợp", renderPractice);
-        };
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar.classList.contains('-translate-x-full')) {
-                sidebar.classList.remove('-translate-x-full');
+        window.nextQuestion = async () => {
+            currentQIndex++;
+            if (currentQIndex < quizQuestions.length) {
+                renderQuestion();
             } else {
-                sidebar.classList.add('-translate-x-full');
+                // End Game
+                showToast(`Kết thúc! Điểm của bạn: ${score}`);
+                await saveScore(score);
+                window.navigate('leaderboard');
             }
         }
 
-        document.getElementById('mobile-menu-btn').addEventListener('click', toggleSidebar);
+        async function saveScore(finalScore) {
+            if (!currentUser) return;
+            try {
+                // Save to PUBLIC DATA for leaderboard
+                await addDoc(collection(db, PUBLIC_DATA_PATH, "scores"), {
+                    email: currentUser.email,
+                    score: finalScore,
+                    timestamp: new Date()
+                });
+            } catch (err) {
+                console.error("Lỗi lưu điểm", err);
+            }
+        }
 
-        renderSidebar();
-        renderHome(); 
+        // 10. LEADERBOARD LOGIC
+        async function fetchLeaderboard() {
+            toggleLoading(true);
+            const tbody = get('leaderboard-body');
+            tbody.innerHTML = '';
 
+            try {
+                const q = query(collection(db, PUBLIC_DATA_PATH, "scores"), orderBy("score", "desc"), limit(10));
+                const querySnapshot = await getDocs(q);
+                
+                let rank = 1;
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const row = document.createElement('tr');
+                    
+                    let rankClass = '';
+                    if (rank === 1) rankClass = 'rank-1';
+                    if (rank === 2) rankClass = 'rank-2';
+                    if (rank === 3) rankClass = 'rank-3';
+
+                    row.innerHTML = `
+                        <td class="${rankClass}">#${rank}</td>
+                        <td>${data.email.split('@')[0]}</td>
+                        <td style="font-weight:bold">${data.score}</td>
+                    `;
+                    tbody.appendChild(row);
+                    rank++;
+                });
+            } catch (err) {
+                showToast("Lỗi tải bảng xếp hạng");
+                console.error(err);
+            }
+            toggleLoading(false);
+        }
     </script>
 </body>
 </html>

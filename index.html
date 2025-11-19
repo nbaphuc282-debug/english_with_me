@@ -89,7 +89,7 @@
                         <div class="p-2 hover:bg-gray-50 rounded cursor-pointer text-primary">Electrical Engineering</div>
                     </div>
                 </div>
-                <a href="#" onclick="alert('Tính năng đang phát triển!')" class="hover:text-primary transition">Luyện tập</a>
+                <a href="#" onclick="renderPractice()" class="hover:text-primary transition">Luyện tập</a>
             </nav>
 
             <!-- Auth Section -->
@@ -323,8 +323,9 @@
                 
                 // Re-render content if in a protected area
                 const main = document.getElementById('main-content');
-                if (main.querySelector('#locked-message')) {
-                   renderUnit(window.appState.currentUnitId);
+                // If user logs in while on practice page, reload it
+                if (main.querySelector('h2')?.textContent.includes('Khu vực Luyện tập')) {
+                    renderPractice();
                 }
             } else {
                 guestDiv.classList.remove('hidden');
@@ -344,8 +345,6 @@
         };
 
         // --- 4. COURSE DATA (Extracted from Word File) ---
-        // Only populating first few units fully for clean code demonstration.
-        // The structure supports all 10 units.
         
         const courseData = [
             {
@@ -454,6 +453,9 @@
             const main = document.getElementById('main-content');
             window.appState.currentUnitId = null;
             
+            // Close mobile sidebar if open
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+
             main.innerHTML = `
                 <!-- Hero Banner -->
                 <div class="bg-gradient-to-r from-primary to-secondary text-white p-8 md:p-12 relative overflow-hidden">
@@ -518,6 +520,95 @@
                 </div>
             `;
         }
+
+        // --- NEW: PRACTICE CENTER LOGIC ---
+        window.renderPractice = () => {
+            const main = document.getElementById('main-content');
+            
+            // Close mobile sidebar if open
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+
+            if (!window.appState.user) {
+                 main.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full p-6 text-center fade-in">
+                        <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center text-4xl text-gray-400 mb-6">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Khu vực Luyện tập</h2>
+                        <p class="text-gray-500 mb-6 max-w-md">Vui lòng đăng nhập để truy cập các bài kiểm tra tổng hợp và theo dõi tiến độ học tập của bạn.</p>
+                        <button onclick="openAuthModal('login')" class="bg-primary text-white px-6 py-2.5 rounded-full font-bold shadow-lg hover:bg-violet-700 transition">
+                            Đăng nhập ngay
+                        </button>
+                    </div>
+                 `;
+                 return;
+            }
+
+            main.innerHTML = `
+                <div class="max-w-5xl mx-auto p-6 md:p-10 fade-in">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Khu vực Luyện tập</h2>
+                    
+                    <!-- Stats Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                             <div class="w-12 h-12 bg-violet-100 text-primary rounded-full flex items-center justify-center text-xl"><i class="fa-solid fa-list-check"></i></div>
+                             <div>
+                                <div class="text-gray-500 text-sm font-medium">Tổng câu hỏi</div>
+                                <div class="text-2xl font-bold text-gray-800 mt-1">24</div>
+                             </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-emerald-100 text-accent rounded-full flex items-center justify-center text-xl"><i class="fa-solid fa-crosshairs"></i></div>
+                             <div>
+                                <div class="text-gray-500 text-sm font-medium">Độ chính xác</div>
+                                <div class="text-2xl font-bold text-gray-800 mt-1">85%</div>
+                             </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center text-xl"><i class="fa-solid fa-fire"></i></div>
+                             <div>
+                                <div class="text-gray-500 text-sm font-medium">Chuỗi ngày học</div>
+                                <div class="text-2xl font-bold text-gray-800 mt-1">3 ngày</div>
+                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Mixed Quiz Card -->
+                        <div onclick="startMixedQuiz()" class="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl p-8 text-white shadow-xl transform hover:scale-[1.02] transition duration-300 cursor-pointer relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition"><i class="fa-solid fa-shuffle text-9xl"></i></div>
+                            <div class="relative z-10">
+                                <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center text-2xl mb-6 backdrop-blur-sm">
+                                    <i class="fa-solid fa-brain"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold mb-3">Ôn tập Tổng hợp</h3>
+                                <p class="text-indigo-100 mb-6 leading-relaxed">Hệ thống sẽ chọn ngẫu nhiên 10 câu hỏi từ tất cả các bài học để kiểm tra kiến thức tổng quát của bạn.</p>
+                                <button class="bg-white text-primary px-6 py-2.5 rounded-full font-bold shadow-md hover:bg-indigo-50 transition">Bắt đầu ngay <i class="fa-solid fa-arrow-right ml-2"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Topic Selection -->
+                        <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 flex flex-col">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-filter text-primary"></i> Chọn chủ đề cụ thể</h3>
+                            <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 max-h-[300px]">
+                                ${courseData.map(u => `
+                                    <div onclick="startQuiz(${u.id})" class="p-4 rounded-xl border border-gray-100 hover:bg-purple-50 hover:border-primary/30 cursor-pointer flex items-center justify-between transition group">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-xs group-hover:bg-primary group-hover:text-white transition">
+                                                <i class="fa-solid ${u.icon}"></i>
+                                            </div>
+                                            <span class="font-medium text-gray-700 group-hover:text-primary transition">${u.title}</span>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-primary text-sm transition"></i>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
 
         // Render Specific Unit Content
         window.renderUnit = (unitId) => {
@@ -623,112 +714,166 @@
             `;
         }
 
-        // --- 6. GAMIFICATION LOGIC (QUIZ) ---
+        // --- 6. GAMIFICATION LOGIC (QUIZ REFACTORED) ---
 
+        // Generic function to run any set of questions
+        window.runGenericQuiz = (questions, title, onExitCallback) => {
+             const main = document.getElementById('main-content');
+             let currentQuestionIndex = 0;
+             let score = 0;
+
+             // Temporary global helper for this specific quiz session
+             window.quizState = {
+                 questions: questions,
+                 onExit: onExitCallback,
+                 currentIndex: 0,
+                 score: 0
+             };
+
+             const renderQuestion = () => {
+                 if (window.quizState.currentIndex >= questions.length) {
+                     // Finish Screen
+                     main.innerHTML = `
+                        <div class="min-h-full flex items-center justify-center p-4 fade-in">
+                            <div class="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md w-full relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-secondary"></div>
+                                <div class="text-6xl mb-4 animate-bounce">🎉</div>
+                                <h2 class="text-2xl font-bold text-gray-800 mb-2">Hoàn thành!</h2>
+                                <p class="text-gray-600 mb-6">Bạn đã trả lời đúng <span class="text-primary font-bold text-xl">${window.quizState.score}/${questions.length}</span> câu hỏi.</p>
+                                <div class="flex gap-3 justify-center">
+                                    <button onclick="quizState.onExit()" class="px-6 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-violet-700 shadow-lg shadow-primary/30 transition">Quay lại</button>
+                                </div>
+                            </div>
+                        </div>
+                     `;
+                     return;
+                 }
+
+                 const q = questions[window.quizState.currentIndex];
+                 
+                 main.innerHTML = `
+                    <div class="max-w-2xl mx-auto p-6 mt-10 fade-in">
+                        <div class="mb-6 flex justify-between items-center">
+                            <button onclick="quizState.onExit()" class="text-gray-500 hover:text-gray-800 font-medium"><i class="fa-solid fa-arrow-left mr-2"></i>Thoát</button>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-gray-500 font-medium">${title}</span>
+                                <span class="bg-purple-100 text-primary px-3 py-1 rounded-full text-xs font-bold">Câu ${window.quizState.currentIndex + 1}/${questions.length}</span>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mb-6">
+                            <div class="bg-primary h-1.5 rounded-full transition-all duration-500" style="width: ${((window.quizState.currentIndex + 1) / questions.length) * 100}%"></div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6 leading-relaxed">${q.q}</h3>
+                            
+                            <div class="space-y-3" id="options-container">
+                                ${q.options.map((opt, idx) => `
+                                    <button onclick="handleAnswerCheck(${idx})" class="quiz-option w-full text-left p-4 rounded-xl border-2 border-gray-100 hover:border-primary hover:bg-purple-50 transition duration-200 font-medium text-gray-600" id="opt-${idx}">
+                                        <span class="inline-block w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-xs text-center leading-6 mr-2 border border-gray-200 font-bold">${String.fromCharCode(65+idx)}</span> ${opt}
+                                    </button>
+                                `).join('')}
+                            </div>
+
+                            <div id="feedback-area" class="mt-6 hidden animate-fadeIn">
+                                <div id="feedback-msg" class="p-4 rounded-lg mb-4 font-bold text-center"></div>
+                                <button onclick="handleNextQuestion()" class="w-full bg-gray-900 text-white py-3 rounded-lg font-bold hover:bg-black transition flex items-center justify-center gap-2">Câu tiếp theo <i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                 `;
+             };
+             
+             // Internal handlers for the quiz logic
+             window.handleAnswerCheck = (selectedIndex) => {
+                 const q = window.quizState.questions[window.quizState.currentIndex];
+                 const isCorrect = selectedIndex === q.correct;
+                 const container = document.getElementById('options-container');
+                 const feedbackArea = document.getElementById('feedback-area');
+                 const feedbackMsg = document.getElementById('feedback-msg');
+
+                 // Disable buttons
+                 const buttons = container.querySelectorAll('button');
+                 buttons.forEach(btn => btn.disabled = true);
+
+                 const selectedBtn = document.getElementById(`opt-${selectedIndex}`);
+                 const correctBtn = document.getElementById(`opt-${q.correct}`);
+
+                 if (isCorrect) {
+                     selectedBtn.classList.remove('border-gray-100', 'hover:border-primary', 'text-gray-600');
+                     selectedBtn.classList.add('bg-green-50', 'border-green-500', 'text-green-800');
+                     selectedBtn.querySelector('span').classList.add('bg-green-200', 'text-green-800', 'border-green-300');
+                     
+                     feedbackMsg.className = "p-3 rounded-lg mb-4 font-bold text-center bg-green-100 text-green-800 border border-green-200";
+                     feedbackMsg.innerHTML = `<i class="fa-solid fa-check-circle mr-2"></i>Chính xác!`;
+                     window.quizState.score++;
+                 } else {
+                     selectedBtn.classList.remove('border-gray-100', 'hover:border-primary', 'text-gray-600');
+                     selectedBtn.classList.add('bg-red-50', 'border-red-500', 'text-red-800');
+                     selectedBtn.querySelector('span').classList.add('bg-red-200', 'text-red-800', 'border-red-300');
+                     
+                     // Show correct one
+                     correctBtn.classList.remove('border-gray-100', 'text-gray-600');
+                     correctBtn.classList.add('bg-green-50', 'border-green-500', 'text-green-800');
+                     correctBtn.querySelector('span').classList.add('bg-green-200', 'text-green-800', 'border-green-300');
+
+                     feedbackMsg.className = "p-3 rounded-lg mb-4 font-bold text-center bg-red-100 text-red-800 border border-red-200";
+                     feedbackMsg.innerHTML = `<i class="fa-solid fa-circle-xmark mr-2"></i>Sai rồi!`;
+                 }
+
+                 feedbackArea.classList.remove('hidden');
+             };
+
+             window.handleNextQuestion = () => {
+                 window.quizState.currentIndex++;
+                 renderQuestion();
+             }
+
+             renderQuestion();
+        };
+
+        // 1. Start Unit Quiz
         window.startQuiz = (unitId) => {
             const unit = courseData.find(u => u.id === unitId);
             if (!unit || unit.quiz.length === 0) {
                 alert("Bài tập cho unit này đang được cập nhật.");
                 return;
             }
-
-            const main = document.getElementById('main-content');
-            let currentQuestionIndex = 0;
-            let score = 0;
-
-            // Render Quiz Interface
-            const renderQuestion = () => {
-                if (currentQuestionIndex >= unit.quiz.length) {
-                    // Finish
-                    main.innerHTML = `
-                        <div class="min-h-full flex items-center justify-center p-4 fade-in">
-                            <div class="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md w-full">
-                                <div class="text-6xl mb-4">🎉</div>
-                                <h2 class="text-2xl font-bold text-gray-800 mb-2">Hoàn thành!</h2>
-                                <p class="text-gray-600 mb-6">Bạn đã trả lời đúng <span class="text-primary font-bold text-xl">${score}/${unit.quiz.length}</span> câu hỏi.</p>
-                                <div class="flex gap-3 justify-center">
-                                    <button onclick="renderUnit(${unitId})" class="px-6 py-2 border border-gray-300 rounded-lg font-medium hover:bg-gray-50">Học lại</button>
-                                    <button onclick="renderHome()" class="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-violet-700">Về trang chủ</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    return;
-                }
-
-                const q = unit.quiz[currentQuestionIndex];
-                
-                main.innerHTML = `
-                    <div class="max-w-2xl mx-auto p-6 mt-10 fade-in">
-                        <div class="mb-6 flex justify-between items-center">
-                            <button onclick="renderUnit(${unitId})" class="text-gray-500 hover:text-gray-800"><i class="fa-solid fa-arrow-left mr-2"></i>Thoát</button>
-                            <span class="bg-purple-100 text-primary px-3 py-1 rounded-full text-xs font-bold">Câu ${currentQuestionIndex + 1}/${unit.quiz.length}</span>
-                        </div>
-
-                        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-                            <h3 class="text-xl font-bold text-gray-800 mb-6">${q.q}</h3>
-                            
-                            <div class="space-y-3" id="options-container">
-                                ${q.options.map((opt, idx) => `
-                                    <button onclick="checkAnswer(${idx})" class="quiz-option w-full text-left p-4 rounded-xl border-2 border-gray-100 hover:border-primary hover:bg-purple-50 transition duration-200 font-medium text-gray-600" id="opt-${idx}">
-                                        ${opt}
-                                    </button>
-                                `).join('')}
-                            </div>
-
-                            <div id="feedback-area" class="mt-6 hidden">
-                                <div id="feedback-msg" class="p-4 rounded-lg mb-4 font-bold text-center"></div>
-                                <button onclick="nextQuestion()" class="w-full bg-gray-800 text-white py-3 rounded-lg font-bold hover:bg-black">Câu tiếp theo <i class="fa-solid fa-arrow-right ml-2"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            };
-
-            window.checkAnswer = (selectedIndex) => {
-                const q = unit.quiz[currentQuestionIndex];
-                const isCorrect = selectedIndex === q.correct;
-                const container = document.getElementById('options-container');
-                const feedbackArea = document.getElementById('feedback-area');
-                const feedbackMsg = document.getElementById('feedback-msg');
-
-                // Disable all buttons
-                const buttons = container.querySelectorAll('button');
-                buttons.forEach(btn => btn.disabled = true);
-
-                // Style buttons
-                const selectedBtn = document.getElementById(`opt-${selectedIndex}`);
-                const correctBtn = document.getElementById(`opt-${q.correct}`);
-
-                if (isCorrect) {
-                    selectedBtn.classList.remove('border-gray-100', 'hover:border-primary');
-                    selectedBtn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
-                    feedbackMsg.className = "p-4 rounded-lg mb-4 font-bold text-center bg-green-100 text-green-800";
-                    feedbackMsg.innerHTML = `<i class="fa-solid fa-check-circle mr-2"></i>Chính xác! Xuất sắc.`;
-                    score++;
-                } else {
-                    selectedBtn.classList.remove('border-gray-100', 'hover:border-primary');
-                    selectedBtn.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
-                    
-                    // Show correct answer
-                    correctBtn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
-
-                    feedbackMsg.className = "p-4 rounded-lg mb-4 font-bold text-center bg-red-100 text-red-800";
-                    feedbackMsg.innerHTML = `<i class="fa-solid fa-times-circle mr-2"></i>Sai rồi! Đáp án đúng là màu xanh.`;
-                }
-
-                feedbackArea.classList.remove('hidden');
-                
-                // Attach next function globally temporarily so the button can call it
-                window.nextQuestion = () => {
-                    currentQuestionIndex++;
-                    renderQuestion();
-                }
-            };
-
-            renderQuestion();
+            // Use the generic quiz runner
+            // When exit, go back to that unit page
+            runGenericQuiz(unit.quiz, unit.title, () => renderUnit(unitId));
         };
 
+        // 2. Start Mixed Quiz
+        window.startMixedQuiz = () => {
+            if (!window.appState.user) {
+                openAuthModal('login');
+                return;
+            }
+            
+            // Gather all questions from all units
+            let allQuestions = [];
+            courseData.forEach(u => {
+                if(u.quiz && u.quiz.length > 0) {
+                    allQuestions = [...allQuestions, ...u.quiz];
+                }
+            });
+
+            if (allQuestions.length === 0) {
+                alert("Hệ thống đang cập nhật dữ liệu câu hỏi.");
+                return;
+            }
+
+            // Shuffle array and take 10
+            const shuffled = allQuestions.sort(() => 0.5 - Math.random());
+            const selectedQuestions = shuffled.slice(0, 10);
+
+            // Run quiz
+            // When exit, go back to practice center
+            runGenericQuiz(selectedQuestions, "Bài thi Tổng hợp", renderPractice);
+        };
 
         // --- 7. INITIALIZATION & MOBILE MENU ---
 

@@ -185,7 +185,6 @@
             storageBucket: "ewmp-abc18.firebasestorage.app",
             messagingSenderId: "416084778745",
             appId: "1:416084778745:web:edb8de27952c3007e24c28"
-            measurementId: "G-GVP2MCQNLJ"
         };
 
         let auth;
@@ -202,13 +201,6 @@
         } catch (e) {
             console.error("Firebase Error:", e);
         }
-
-        // --- 2. GLOBAL STATE ---
-        window.appState = {
-            user: null,
-            currentUnitId: null,
-            quizScore: 0
-        };
 
         // --- 3. AUTHENTICATION LOGIC ---
         
@@ -344,6 +336,13 @@
 
     <!-- CONTENT DATA & UI LOGIC -->
     <script>
+        // --- 2. GLOBAL STATE (Moved here to ensure initialization before render) ---
+        window.appState = {
+            user: null,
+            currentUnitId: null,
+            quizScore: 0
+        };
+
         // --- 4. COURSE DATA (Extracted from Word File) ---
         // Only populating first few units fully for clean code demonstration.
         // The structure supports all 10 units.

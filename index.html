@@ -175,6 +175,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        // Add Firestore Imports
+        import { getFirestore, collection, doc, getDoc, setDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
         // --- 1. CONFIGURATION ---
         // NOTE: User needs to fill this in!
@@ -187,14 +189,14 @@
             appId: "1:416084778745:web:edb8de27952c3007e24c28"
         };
 
-        let auth;
-        let currentUser = null;
+        let auth, db;
 
         // Initialize Firebase safely
         try {
             if (firebaseConfig.apiKey) {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
+                db = getFirestore(app);
             } else {
                 console.warn("Firebase chưa được cấu hình. Vui lòng điền API Key trong code.");
             }
@@ -202,9 +204,62 @@
             console.error("Firebase Error:", e);
         }
 
+        // --- 2. FIRESTORE HELPERS (Leaderboard & Scoring) ---
+
+        // Function to save/update user score
+        window.saveUserScore = async (pointsToAdd) => {
+            if (!auth || !auth.currentUser) return;
+            
+            const userId = auth.currentUser.uid;
+            const userEmail = auth.currentUser.email;
+            const userName = userEmail.split('@')[0]; // Use part before @ as name
+            const userRef = doc(db, "users", userId);
+
+            try {
+                const userSnap = await getDoc(userRef);
+                let currentScore = 0;
+                
+                if (userSnap.exists()) {
+                    currentScore = userSnap.data().score || 0;
+                }
+
+                const newScore = currentScore + pointsToAdd;
+
+                await setDoc(userRef, {
+                    email: userEmail,
+                    name: userName,
+                    score: newScore,
+                    avatar: userName.substring(0, 2).toUpperCase(),
+                    lastUpdated: new Date()
+                }, { merge: true });
+
+                console.log(`Saved score. New total: ${newScore}`);
+                return newScore;
+            } catch (e) {
+                console.error("Error saving score:", e);
+            }
+        };
+
+        // Function to fetch leaderboard
+        window.fetchLeaderboard = async () => {
+            if (!db) return [];
+            try {
+                const q = query(collection(db, "users"), orderBy("score", "desc"), limit(5));
+                const querySnapshot = await getDocs(q);
+                const leaderboard = [];
+                querySnapshot.forEach((doc) => {
+                    leaderboard.push(doc.data());
+                });
+                return leaderboard;
+            } catch (e) {
+                console.error("Error fetching leaderboard:", e);
+                return [];
+            }
+        };
+
+
         // --- 3. AUTHENTICATION LOGIC ---
         
-        // Expose functions to window for HTML onclick attributes
         window.openAuthModal = (mode) => {
             const modal = document.getElementById('auth-modal');
             const title = document.getElementById('modal-title');
@@ -212,7 +267,7 @@
             const switchText = document.getElementById('switch-text');
             const switchBtn = document.getElementById('switch-btn');
             
-            window.currentAuthMode = mode; // 'login' or 'register'
+            window.currentAuthMode = mode; 
             
             if (mode === 'login') {
                 title.textContent = 'Đăng nhập';
@@ -244,13 +299,12 @@
             try {
                 await signOut(auth);
                 alert("Đã đăng xuất thành công!");
-                renderHome(); // Reset view
+                renderHome(); 
             } catch (error) {
                 console.error(error);
             }
         };
 
-        // Handle Form Submit
         document.getElementById('auth-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!auth) {
@@ -283,7 +337,6 @@
             }
         });
 
-        // Error Translation
         function getFriendlyErrorMessage(code) {
             switch(code) {
                 case 'auth/invalid-email': return 'Email không hợp lệ.';
@@ -296,14 +349,12 @@
             }
         }
 
-        // Auth State Listener
         if(auth) {
             onAuthStateChanged(auth, (user) => {
                 window.appState.user = user;
                 updateAuthUI(user);
             });
         } else {
-            // Fallback UI for demo without config
             updateAuthUI(null); 
         }
 
@@ -321,11 +372,12 @@
                 userDiv.classList.add('flex');
                 userEmailSpan.textContent = `Xin chào, ${user.email}`;
                 
-                // Re-render content if in a protected area
                 const main = document.getElementById('main-content');
-                // If user logs in while on practice page, reload it
                 if (main.querySelector('h2')?.textContent.includes('Khu vực Luyện tập')) {
                     renderPractice();
+                } else if (main.querySelector('#leaderboard-placeholder')) {
+                    // Reload home to fetch real leaderboard
+                    renderHome();
                 }
             } else {
                 guestDiv.classList.remove('hidden');
@@ -337,14 +389,14 @@
 
     <!-- CONTENT DATA & UI LOGIC -->
     <script>
-        // --- 2. GLOBAL STATE (Moved here to ensure initialization before render) ---
+        // --- 2. GLOBAL STATE ---
         window.appState = {
             user: null,
             currentUnitId: null,
             quizScore: 0
         };
 
-        // --- 4. COURSE DATA (Extracted from Word File) ---
+        // --- 4. COURSE DATA ---
         
         const courseData = [
             {
@@ -423,14 +475,6 @@
             { id: 10, title: "Unit 10: Semiconductors", icon: "fa-memory", desc: "Diodes, P-N junctions, LEDs.", vocabulary: [], essay: "<p>Content for Unit 10...</p>", quiz: [] },
         ];
 
-        const leaderboardData = [
-            { name: "Nguyễn Văn A", score: 980, avatar: "NV" },
-            { name: "Trần Thị B", score: 950, avatar: "TT" },
-            { name: "Lê Hoàng C", score: 890, avatar: "LH" },
-            { name: "Phạm Minh D", score: 850, avatar: "PM" },
-            { name: "Hoàng Anh E", score: 820, avatar: "HA" },
-        ];
-
         // --- 5. UI RENDERING LOGIC ---
 
         function renderSidebar() {
@@ -453,7 +497,6 @@
             const main = document.getElementById('main-content');
             window.appState.currentUnitId = null;
             
-            // Close mobile sidebar if open
             document.getElementById('sidebar').classList.add('-translate-x-full');
 
             main.innerHTML = `
@@ -467,7 +510,6 @@
                             `<button onclick="renderUnit(1)" class="bg-accent text-white px-6 py-3 rounded-full font-bold hover:bg-emerald-600 transition shadow-lg">Tiếp tục học Unit 1 >></button>`
                         }
                     </div>
-                    <!-- Abstract Decoration -->
                     <div class="absolute right-0 bottom-0 opacity-20 transform translate-x-1/4 translate-y-1/4">
                          <i class="fa-solid fa-atom text-[300px]"></i>
                     </div>
@@ -490,30 +532,60 @@
                         </div>
                     </div>
 
-                    <!-- Leaderboard Section (Only visible if logged in) -->
-                    ${window.appState.user ? renderLeaderboardHTML() : ''}
+                    <!-- Leaderboard Section -->
+                    <div id="leaderboard-placeholder">
+                        ${window.appState.user ? 
+                            '<div class="bg-white p-6 rounded-xl shadow-sm text-center text-gray-500">Đang tải bảng xếp hạng...</div>' : 
+                            ''
+                        }
+                    </div>
                 </div>
             `;
+
+            if(window.appState.user) {
+                loadLeaderboardUI();
+            }
         };
 
-        function renderLeaderboardHTML() {
-            return `
+        async function loadLeaderboardUI() {
+            const container = document.getElementById('leaderboard-placeholder');
+            if(!container) return;
+
+            // Use window function to fetch data
+            const data = window.fetchLeaderboard ? await window.fetchLeaderboard() : [];
+            
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 text-center text-gray-500">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">Bảng Vàng Thành Tích</h3>
+                        <p>Chưa có dữ liệu hoặc chưa kết nối Database.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden fade-in">
                     <div class="bg-yellow-50 p-4 border-b border-yellow-100 flex justify-between items-center">
-                        <h3 class="text-lg font-bold text-yellow-800"><i class="fa-solid fa-crown mr-2"></i>Bảng Vàng Thành Tích</h3>
-                        <span class="text-xs font-semibold bg-yellow-200 text-yellow-800 px-2 py-1 rounded">Tuần này</span>
+                        <h3 class="text-lg font-bold text-yellow-800"><i class="fa-solid fa-crown mr-2"></i>Top Sinh Viên Xuất Sắc</h3>
+                        <span class="text-xs font-semibold bg-yellow-200 text-yellow-800 px-2 py-1 rounded">Realtime</span>
                     </div>
                     <div class="divide-y divide-gray-100">
-                        ${leaderboardData.map((u, index) => `
+                        ${data.map((u, index) => `
                             <div class="flex items-center justify-between p-4 hover:bg-gray-50">
                                 <div class="flex items-center gap-4">
-                                    <div class="font-bold text-gray-400 w-6 text-center">${index + 1}</div>
-                                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center text-sm font-bold text-gray-600">
-                                        ${u.avatar}
+                                    <div class="font-bold ${index < 3 ? 'text-yellow-500 text-xl' : 'text-gray-400'} w-8 text-center">
+                                        ${index === 0 ? '<i class="fa-solid fa-trophy"></i>' : index + 1}
                                     </div>
-                                    <span class="font-medium text-gray-700">${u.name}</span>
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center text-sm font-bold text-gray-600">
+                                        ${u.avatar || '??'}
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-800">${u.name || u.email}</p>
+                                        <p class="text-xs text-gray-400">Sinh viên chăm chỉ</p>
+                                    </div>
                                 </div>
-                                <div class="font-bold text-primary">${u.score} pts</div>
+                                <div class="font-bold text-primary text-lg">${u.score} pts</div>
                             </div>
                         `).join('')}
                     </div>
@@ -521,11 +593,8 @@
             `;
         }
 
-        // --- NEW: PRACTICE CENTER LOGIC ---
         window.renderPractice = () => {
             const main = document.getElementById('main-content');
-            
-            // Close mobile sidebar if open
             document.getElementById('sidebar').classList.add('-translate-x-full');
 
             if (!window.appState.user) {
@@ -535,7 +604,7 @@
                             <i class="fa-solid fa-lock"></i>
                         </div>
                         <h2 class="text-2xl font-bold text-gray-800 mb-2">Khu vực Luyện tập</h2>
-                        <p class="text-gray-500 mb-6 max-w-md">Vui lòng đăng nhập để truy cập các bài kiểm tra tổng hợp và theo dõi tiến độ học tập của bạn.</p>
+                        <p class="text-gray-500 mb-6 max-w-md">Vui lòng đăng nhập để truy cập.</p>
                         <button onclick="openAuthModal('login')" class="bg-primary text-white px-6 py-2.5 rounded-full font-bold shadow-lg hover:bg-violet-700 transition">
                             Đăng nhập ngay
                         </button>
@@ -548,32 +617,6 @@
                 <div class="max-w-5xl mx-auto p-6 md:p-10 fade-in">
                     <h2 class="text-3xl font-bold text-gray-900 mb-6">Khu vực Luyện tập</h2>
                     
-                    <!-- Stats Row -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                             <div class="w-12 h-12 bg-violet-100 text-primary rounded-full flex items-center justify-center text-xl"><i class="fa-solid fa-list-check"></i></div>
-                             <div>
-                                <div class="text-gray-500 text-sm font-medium">Tổng câu hỏi</div>
-                                <div class="text-2xl font-bold text-gray-800 mt-1">24</div>
-                             </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                            <div class="w-12 h-12 bg-emerald-100 text-accent rounded-full flex items-center justify-center text-xl"><i class="fa-solid fa-crosshairs"></i></div>
-                             <div>
-                                <div class="text-gray-500 text-sm font-medium">Độ chính xác</div>
-                                <div class="text-2xl font-bold text-gray-800 mt-1">85%</div>
-                             </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                            <div class="w-12 h-12 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center text-xl"><i class="fa-solid fa-fire"></i></div>
-                             <div>
-                                <div class="text-gray-500 text-sm font-medium">Chuỗi ngày học</div>
-                                <div class="text-2xl font-bold text-gray-800 mt-1">3 ngày</div>
-                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Actions Grid -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <!-- Mixed Quiz Card -->
                         <div onclick="startMixedQuiz()" class="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl p-8 text-white shadow-xl transform hover:scale-[1.02] transition duration-300 cursor-pointer relative overflow-hidden group">
@@ -583,7 +626,7 @@
                                     <i class="fa-solid fa-brain"></i>
                                 </div>
                                 <h3 class="text-2xl font-bold mb-3">Ôn tập Tổng hợp</h3>
-                                <p class="text-indigo-100 mb-6 leading-relaxed">Hệ thống sẽ chọn ngẫu nhiên 10 câu hỏi từ tất cả các bài học để kiểm tra kiến thức tổng quát của bạn.</p>
+                                <p class="text-indigo-100 mb-6 leading-relaxed">Hệ thống sẽ chọn ngẫu nhiên 10 câu hỏi.</p>
                                 <button class="bg-white text-primary px-6 py-2.5 rounded-full font-bold shadow-md hover:bg-indigo-50 transition">Bắt đầu ngay <i class="fa-solid fa-arrow-right ml-2"></i></button>
                             </div>
                         </div>
@@ -610,18 +653,15 @@
             `;
         };
 
-        // Render Specific Unit Content
         window.renderUnit = (unitId) => {
             window.appState.currentUnitId = unitId;
             const unit = courseData.find(u => u.id === unitId);
             const main = document.getElementById('main-content');
 
-            // Close mobile sidebar if open
             document.getElementById('sidebar').classList.add('-translate-x-full');
 
             main.innerHTML = `
                 <div class="max-w-4xl mx-auto p-6 pb-24 fade-in">
-                    <!-- Header -->
                     <div class="mb-8 border-b pb-4">
                         <div class="flex items-center gap-2 text-sm text-primary font-semibold mb-2">
                             <span onclick="renderHome()" class="cursor-pointer hover:underline">Trang chủ</span> / <span>${unit.title}</span>
@@ -630,13 +670,8 @@
                         <p class="text-gray-500 mt-2">${unit.desc}</p>
                     </div>
 
-                    <!-- Content Grid -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        
-                        <!-- Left: Learning Content -->
                         <div class="lg:col-span-2 space-y-8">
-                            
-                            <!-- Vocabulary Section -->
                             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                                 <div class="bg-blue-50 px-6 py-3 border-b border-blue-100">
                                     <h3 class="font-bold text-blue-800"><i class="fa-solid fa-language mr-2"></i>Vocabulary</h3>
@@ -662,19 +697,13 @@
                                     </table>
                                 </div>
                             </div>
-
-                            <!-- Reading/Essay Section -->
                             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-gray-700 leading-relaxed">
                                 ${unit.essay}
                             </div>
-
                         </div>
 
-                        <!-- Right: Gamification Sidebar -->
                         <div class="lg:col-span-1">
                             <div class="sticky top-4 space-y-6">
-                                
-                                <!-- Quiz Card -->
                                 <div class="bg-white rounded-xl shadow-lg border border-purple-100 overflow-hidden relative">
                                     <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
                                     <div class="p-6 text-center">
@@ -692,37 +721,18 @@
                                         }
                                     </div>
                                 </div>
-
-                                <!-- Video Resources (Static Mockup) -->
-                                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                                    <h4 class="font-bold text-gray-800 mb-3 text-sm">Video tham khảo</h4>
-                                    <a href="https://www.youtube.com/@EngineeringMindset" target="_blank" class="block group">
-                                        <div class="relative rounded-lg overflow-hidden aspect-video bg-gray-900 mb-2">
-                                            <img src="https://img.youtube.com/vi/hsldXsJ5H_c/mqdefault.jpg" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition">
-                                            <div class="absolute inset-0 flex items-center justify-center">
-                                                <i class="fa-solid fa-play-circle text-white text-4xl"></i>
-                                            </div>
-                                        </div>
-                                        <p class="text-xs font-medium text-gray-700 group-hover:text-primary">The Engineering Mindset</p>
-                                    </a>
-                                </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
             `;
         }
 
-        // --- 6. GAMIFICATION LOGIC (QUIZ REFACTORED) ---
+        // --- 6. GAMIFICATION LOGIC (Updated to Save Score) ---
 
-        // Generic function to run any set of questions
         window.runGenericQuiz = (questions, title, onExitCallback) => {
              const main = document.getElementById('main-content');
-             let currentQuestionIndex = 0;
-             let score = 0;
-
-             // Temporary global helper for this specific quiz session
+             
              window.quizState = {
                  questions: questions,
                  onExit: onExitCallback,
@@ -732,14 +742,27 @@
 
              const renderQuestion = () => {
                  if (window.quizState.currentIndex >= questions.length) {
-                     // Finish Screen
+                     // Finish Screen Logic
+                     const totalScore = window.quizState.score * 10; // 10 points per question
+
+                     // Trigger Save to Firestore
+                     if (window.saveUserScore) {
+                         window.saveUserScore(totalScore);
+                     }
+
                      main.innerHTML = `
                         <div class="min-h-full flex items-center justify-center p-4 fade-in">
                             <div class="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md w-full relative overflow-hidden">
                                 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-secondary"></div>
                                 <div class="text-6xl mb-4 animate-bounce">🎉</div>
                                 <h2 class="text-2xl font-bold text-gray-800 mb-2">Hoàn thành!</h2>
-                                <p class="text-gray-600 mb-6">Bạn đã trả lời đúng <span class="text-primary font-bold text-xl">${window.quizState.score}/${questions.length}</span> câu hỏi.</p>
+                                <p class="text-gray-600 mb-6">Bạn trả lời đúng <span class="text-primary font-bold text-xl">${window.quizState.score}/${questions.length}</span> câu.</p>
+                                
+                                <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                                    <p class="text-sm text-green-800 font-medium">Điểm cộng vào bảng vàng</p>
+                                    <p class="text-3xl font-bold text-green-600">+${totalScore}</p>
+                                </div>
+
                                 <div class="flex gap-3 justify-center">
                                     <button onclick="quizState.onExit()" class="px-6 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-violet-700 shadow-lg shadow-primary/30 transition">Quay lại</button>
                                 </div>
@@ -761,7 +784,6 @@
                             </div>
                         </div>
 
-                        <!-- Progress Bar -->
                         <div class="w-full bg-gray-200 rounded-full h-1.5 mb-6">
                             <div class="bg-primary h-1.5 rounded-full transition-all duration-500" style="width: ${((window.quizState.currentIndex + 1) / questions.length) * 100}%"></div>
                         </div>
@@ -786,7 +808,6 @@
                  `;
              };
              
-             // Internal handlers for the quiz logic
              window.handleAnswerCheck = (selectedIndex) => {
                  const q = window.quizState.questions[window.quizState.currentIndex];
                  const isCorrect = selectedIndex === q.correct;
@@ -794,7 +815,6 @@
                  const feedbackArea = document.getElementById('feedback-area');
                  const feedbackMsg = document.getElementById('feedback-msg');
 
-                 // Disable buttons
                  const buttons = container.querySelectorAll('button');
                  buttons.forEach(btn => btn.disabled = true);
 
@@ -814,7 +834,6 @@
                      selectedBtn.classList.add('bg-red-50', 'border-red-500', 'text-red-800');
                      selectedBtn.querySelector('span').classList.add('bg-red-200', 'text-red-800', 'border-red-300');
                      
-                     // Show correct one
                      correctBtn.classList.remove('border-gray-100', 'text-gray-600');
                      correctBtn.classList.add('bg-green-50', 'border-green-500', 'text-green-800');
                      correctBtn.querySelector('span').classList.add('bg-green-200', 'text-green-800', 'border-green-300');
@@ -841,8 +860,6 @@
                 alert("Bài tập cho unit này đang được cập nhật.");
                 return;
             }
-            // Use the generic quiz runner
-            // When exit, go back to that unit page
             runGenericQuiz(unit.quiz, unit.title, () => renderUnit(unitId));
         };
 
@@ -853,7 +870,6 @@
                 return;
             }
             
-            // Gather all questions from all units
             let allQuestions = [];
             courseData.forEach(u => {
                 if(u.quiz && u.quiz.length > 0) {
@@ -866,16 +882,11 @@
                 return;
             }
 
-            // Shuffle array and take 10
             const shuffled = allQuestions.sort(() => 0.5 - Math.random());
             const selectedQuestions = shuffled.slice(0, 10);
 
-            // Run quiz
-            // When exit, go back to practice center
             runGenericQuiz(selectedQuestions, "Bài thi Tổng hợp", renderPractice);
         };
-
-        // --- 7. INITIALIZATION & MOBILE MENU ---
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -888,9 +899,8 @@
 
         document.getElementById('mobile-menu-btn').addEventListener('click', toggleSidebar);
 
-        // Init
         renderSidebar();
-        renderHome(); // Start at home
+        renderHome(); 
 
     </script>
 </body>

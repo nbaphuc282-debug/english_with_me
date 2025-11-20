@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electro Mind - Electrical Engineering Learning - 1.0.5</title>
+    <title>Electro Mind - Electrical Engineering Learning - 1.0.6 </title>
     
     <!-- Font chữ Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -154,6 +154,7 @@
         .writing-meta { font-size: 0.85rem; color: var(--text-light); margin-bottom: 15px; }
         .submission-box { background: #f9fafb; border-radius: 8px; padding: 15px; border: 1px dashed #ccc; margin-top: 15px; }
         .grade-feedback { background: #ecfdf5; border: 1px solid #a7f3d0; padding: 15px; border-radius: 8px; margin-top: 15px; color: #064e3b; }
+        .score-display { font-weight: bold; color: var(--success); font-size: 1.2rem; }
 
         /* Vocabulary Table Styles */
         .vocab-table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; }
@@ -379,9 +380,15 @@
                         </form>
                     </div>
 
-                    <h3 style="margin: 30px 0 15px;">Danh sách bài cần chấm</h3>
-                    <div id="teacher-grading-list">
+                    <!-- UPDATE: Split into Pending and Graded lists -->
+                    <h3 style="margin: 30px 0 15px; color: var(--warning);"><i class="fa-solid fa-hourglass-half"></i> Bài cần chấm (Pending)</h3>
+                    <div id="teacher-pending-list">
                         <!-- Pending submissions injected here -->
+                    </div>
+
+                    <h3 style="margin: 30px 0 15px; color: var(--success);"><i class="fa-solid fa-check-double"></i> Lịch sử chấm điểm (Graded)</h3>
+                    <div id="teacher-graded-list">
+                        <!-- Graded submissions injected here -->
                     </div>
                 </div>
 
@@ -551,7 +558,6 @@
     <!-- SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        // IMPORT signInWithCustomToken & signInAnonymously
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDoc, getDocs, doc, setDoc, query, orderBy, limit, updateDoc, deleteDoc, where } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
@@ -589,25 +595,17 @@
             setTimeout(() => t.classList.remove('show'), 3000);
         }
         
-        // --- AUTH INIT (FIX FOR PERMISSIONS ERROR) ---
         const initAuth = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 try {
                     await signInWithCustomToken(auth, __initial_auth_token);
-                    console.log("Authenticated with custom token");
                 } catch (e) {
-                    console.warn("Custom token failed, trying anon", e);
                     await signInAnonymously(auth);
                 }
-            } else {
-                // Fallback for environments without custom tokens
-                // Wait for standard auth state
             }
         };
-        // Execute immediately
         initAuth();
 
-        // --- UTILS ---
         window.scrollToLessons = () => {
             const el = get('lesson-anchor');
             if(el) el.scrollIntoView({behavior: 'smooth'});
@@ -634,7 +632,6 @@
         }
         window.addEventListener('DOMContentLoaded', () => { addVocabRow(); });
 
-        // --- NAVIGATION ---
         window.switchAuthRole = (role) => {
             selectedRoleAuth = role;
             document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
@@ -656,14 +653,14 @@
             else if (viewId === 'teacher-create-lesson') { show('view-teacher-create-lesson'); }
             else if (viewId === 'teacher-create-quiz') { show('view-teacher-create-quiz'); }
             else if (viewId === 'student-writing') { show('view-student-writing'); fetchStudentWriting(); }
-            else if (viewId === 'teacher-writing-manage') { show('view-teacher-writing-manage'); fetchTeacherPendingSubmissions(); }
+            // UPDATE: Use new fetch function
+            else if (viewId === 'teacher-writing-manage') { show('view-teacher-writing-manage'); fetchTeacherWritingDashboard(); }
             else if (viewId === 'view-lesson-detail') { show('view-lesson-detail'); }
             
             const activeMenu = document.querySelector(`.menu-item[onclick="navigate('${viewId}')"]`);
             if (activeMenu) activeMenu.classList.add('active');
         }
 
-        // --- AUTH LOGIC ---
         onAuthStateChanged(auth, async (user) => {
             toggleLoading(true);
             if (user) {
@@ -673,8 +670,6 @@
                     currentRole = userDoc.exists() ? userDoc.data().role : 'student';
                     setupDashboard(user, currentRole);
                 } catch (e) {
-                    // If profile fetch fails (e.g. missing perm before write), assume student
-                    console.warn("Profile fetch failed:", e);
                     currentRole = 'student'; 
                     setupDashboard(user, 'student'); 
                 }
@@ -712,7 +707,6 @@
 
         // ---------------- WRITING MODULE LOGIC ----------------
 
-        // A. TEACHER: Create Assignment
         get('create-writing-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (currentRole !== 'teacher') return;
@@ -730,34 +724,81 @@
             toggleLoading(false);
         });
 
-        // A. TEACHER: Fetch Pending Submissions
-        async function fetchTeacherPendingSubmissions() {
+        // UPDATE: New function to fetch BOTH pending and graded submissions
+        window.fetchTeacherWritingDashboard = async () => {
             toggleLoading(true);
-            const container = get('teacher-grading-list');
-            container.innerHTML = '';
+            const pendingContainer = get('teacher-pending-list');
+            const gradedContainer = get('teacher-graded-list');
+            pendingContainer.innerHTML = ''; 
+            gradedContainer.innerHTML = '';
+
             try {
-                const q = query(collection(db, PUBLIC_DATA_PATH, "writing_submissions"), where("status", "==", "pending"));
-                const snapshot = await getDocs(q);
-                if (snapshot.empty) {
-                    container.innerHTML = '<p>Không có bài nào cần chấm.</p>';
+                // 1. Fetch Pending
+                const qPending = query(collection(db, PUBLIC_DATA_PATH, "writing_submissions"), where("status", "==", "pending"));
+                const snapPending = await getDocs(qPending);
+                
+                if (snapPending.empty) {
+                    pendingContainer.innerHTML = '<p class="text-light">Không có bài nào cần chấm.</p>';
                 } else {
-                    snapshot.forEach(doc => {
+                    snapPending.forEach(doc => {
                         const d = doc.data();
                         const div = document.createElement('div');
                         div.className = 'writing-item';
+                        div.style.borderLeft = "4px solid var(--warning)";
                         div.innerHTML = `
                             <div class="writing-header">
                                 <div class="writing-title">${d.assignmentTitle || 'Bài tập chưa đặt tên'}</div>
                                 <span class="badge badge-pending">Pending</span>
                             </div>
                             <div class="writing-meta">Sinh viên: <b>${d.studentEmail}</b></div>
+                            <div class="writing-meta">Nộp lúc: ${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleString() : 'N/A'}</div>
                             <button class="btn btn-primary btn-sm" onclick="openGrading('${doc.id}')">Chấm bài</button>
                         `;
-                        container.appendChild(div);
+                        pendingContainer.appendChild(div);
                     });
                 }
-            } catch(e) { console.error(e); showToast("Lỗi tải bài làm"); }
+
+                // 2. Fetch Graded
+                const qGraded = query(collection(db, PUBLIC_DATA_PATH, "writing_submissions"), where("status", "==", "graded"));
+                // Note: Firestore requires index for compound queries (where status + order by date). 
+                // We'll fetch and sort in JS to avoid index errors in this demo environment.
+                const snapGraded = await getDocs(qGraded);
+                
+                if (snapGraded.empty) {
+                    gradedContainer.innerHTML = '<p class="text-light">Chưa có lịch sử chấm bài.</p>';
+                } else {
+                    const gradedDocs = [];
+                    snapGraded.forEach(doc => gradedDocs.push({id: doc.id, ...doc.data()}));
+                    
+                    // Sort desc by gradedAt
+                    gradedDocs.sort((a, b) => (b.gradedAt?.seconds || 0) - (a.gradedAt?.seconds || 0));
+
+                    gradedDocs.forEach(d => {
+                        const div = document.createElement('div');
+                        div.className = 'writing-item';
+                        div.style.borderLeft = "4px solid var(--success)";
+                        div.innerHTML = `
+                            <div class="writing-header">
+                                <div class="writing-title">${d.assignmentTitle || 'Bài tập'}</div>
+                                <span class="score-display">${d.score}/100</span>
+                            </div>
+                            <div class="writing-meta">Sinh viên: <b>${d.studentEmail}</b></div>
+                            <div class="writing-meta" style="margin-bottom:5px;">Đã chấm: ${d.gradedAt ? new Date(d.gradedAt.seconds*1000).toLocaleString() : 'N/A'}</div>
+                            <div class="grade-feedback" style="margin-top:5px; font-size:0.9rem; color:#555;">
+                                <i>" ${d.feedback} "</i>
+                            </div>
+                            <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="openGrading('${d.id}')">Sửa điểm</button>
+                        `;
+                        gradedContainer.appendChild(div);
+                    });
+                }
+
+            } catch(e) { console.error(e); showToast("Lỗi tải danh sách bài làm"); }
             toggleLoading(false);
+        }
+        // Keep existing alias for compatibility if called elsewhere, but redirect logic
+        async function fetchTeacherPendingSubmissions() {
+            fetchTeacherWritingDashboard();
         }
 
         window.openGrading = async (submissionId) => {
@@ -780,8 +821,15 @@
                         get('grade-student-image-container').style.display = 'none';
                     }
 
+                    // Pre-fill if graded
+                    if (data.status === 'graded') {
+                        get('grade-score').value = data.score;
+                        get('grade-feedback').value = data.feedback;
+                    } else {
+                         get('grading-form').reset();
+                    }
+
                     get('grade-submission-id').value = submissionId;
-                    get('grading-form').reset();
                 }
             } catch(e) { showToast("Lỗi mở bài làm"); }
             toggleLoading(false);

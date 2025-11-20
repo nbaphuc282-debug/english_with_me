@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electro Mind - Electrical Engineering Learning</title>
+    <title>Electro Mind - Electrical Engineering Learning - 1.0.5</title>
     
     <!-- Font chữ Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -551,7 +551,8 @@
     <!-- SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        // IMPORT signInWithCustomToken & signInAnonymously
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDoc, getDocs, doc, setDoc, query, orderBy, limit, updateDoc, deleteDoc, where } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -571,14 +572,13 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const PUBLIC_DATA_PATH = `artifacts/${appId}/public/data`;
         function getUserProfilePath(userId) { return `artifacts/${appId}/users/${userId}/profile`; }
-        // New: Track progress in a dedicated user sub-collection
         function getUserProgressPath(userId) { return `artifacts/${appId}/users/${userId}/progress`; }
 
         let currentUser = null;
         let currentRole = 'student';
         let selectedRoleAuth = 'student';
         let editingLessonId = null;
-        let isEditingMode = false; // FIX: logic Create vs Update
+        let isEditingMode = false;
 
         const get = (id) => document.getElementById(id);
         const show = (id) => get(id).classList.remove('hidden');
@@ -589,13 +589,30 @@
             setTimeout(() => t.classList.remove('show'), 3000);
         }
         
+        // --- AUTH INIT (FIX FOR PERMISSIONS ERROR) ---
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                try {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                    console.log("Authenticated with custom token");
+                } catch (e) {
+                    console.warn("Custom token failed, trying anon", e);
+                    await signInAnonymously(auth);
+                }
+            } else {
+                // Fallback for environments without custom tokens
+                // Wait for standard auth state
+            }
+        };
+        // Execute immediately
+        initAuth();
+
         // --- UTILS ---
         window.scrollToLessons = () => {
             const el = get('lesson-anchor');
             if(el) el.scrollIntoView({behavior: 'smooth'});
         }
         
-        // FIX: Youtube Embed Helper
         function getYouTubeEmbedUrl(url) {
             if (!url) return null;
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -628,10 +645,8 @@
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
             
-            // FIX: Only reset form if NOT in editing mode
             if (viewId === 'teacher-create-lesson') {
                 if (!isEditingMode) resetLessonForm();
-                // Reset flag immediately after using it so next click on menu will reset
                 isEditingMode = false; 
             }
 
@@ -642,7 +657,7 @@
             else if (viewId === 'teacher-create-quiz') { show('view-teacher-create-quiz'); }
             else if (viewId === 'student-writing') { show('view-student-writing'); fetchStudentWriting(); }
             else if (viewId === 'teacher-writing-manage') { show('view-teacher-writing-manage'); fetchTeacherPendingSubmissions(); }
-            else if (viewId === 'view-lesson-detail') { show('view-lesson-detail'); } // Ensure detail view shows
+            else if (viewId === 'view-lesson-detail') { show('view-lesson-detail'); }
             
             const activeMenu = document.querySelector(`.menu-item[onclick="navigate('${viewId}')"]`);
             if (activeMenu) activeMenu.classList.add('active');
@@ -657,14 +672,19 @@
                     const userDoc = await getDoc(doc(db, getUserProfilePath(user.uid), "info"));
                     currentRole = userDoc.exists() ? userDoc.data().role : 'student';
                     setupDashboard(user, currentRole);
-                } catch (e) { currentRole = 'student'; setupDashboard(user, 'student'); }
+                } catch (e) {
+                    // If profile fetch fails (e.g. missing perm before write), assume student
+                    console.warn("Profile fetch failed:", e);
+                    currentRole = 'student'; 
+                    setupDashboard(user, 'student'); 
+                }
             } else { show('auth-screen'); hide('app-dashboard'); }
             toggleLoading(false);
         });
 
         function setupDashboard(user, role) {
             hide('auth-screen'); show('app-dashboard');
-            get('user-email').textContent = user.email;
+            get('user-email').textContent = user.email || "User";
             get('user-badge').textContent = role === 'teacher' ? 'Giáo viên' : 'Sinh viên';
             if (role === 'teacher') { show('teacher-menu'); hide('student-menu'); window.navigate('teacher-create-lesson'); }
             else { show('student-menu'); hide('teacher-menu'); window.navigate('student-lessons'); }
@@ -740,7 +760,6 @@
             toggleLoading(false);
         }
 
-        // A. TEACHER: Open Grading View (FIXED: Ensure ID is set)
         window.openGrading = async (submissionId) => {
             toggleLoading(true);
             try {
@@ -754,7 +773,6 @@
                     get('grade-student-email').textContent = data.studentEmail;
                     get('grade-student-content').textContent = data.content;
                     
-                    // NEW: Show Image if available
                     if (data.imageUrl) {
                         get('grade-student-image-container').style.display = 'block';
                         get('grade-student-image').src = data.imageUrl;
@@ -762,14 +780,13 @@
                         get('grade-student-image-container').style.display = 'none';
                     }
 
-                    get('grade-submission-id').value = submissionId; // IMPORTANT: Set hidden ID
+                    get('grade-submission-id').value = submissionId;
                     get('grading-form').reset();
                 }
             } catch(e) { showToast("Lỗi mở bài làm"); }
             toggleLoading(false);
         }
 
-        // A. TEACHER: Submit Grade (FIXED: Logic verification)
         get('grading-form').addEventListener('submit', async(e) => {
             e.preventDefault();
             toggleLoading(true);
@@ -791,7 +808,6 @@
             toggleLoading(false);
         });
 
-        // B. STUDENT: Fetch Assignments
         async function fetchStudentWriting() {
             toggleLoading(true);
             const container = get('student-writing-list');
@@ -822,7 +838,6 @@
                         `;
 
                         if (!submission) {
-                            // NEW: Add Image Input
                             contentHtml += `
                                 <div class="submission-box">
                                     <textarea id="sub-content-${assignId}" class="input-field" rows="4" placeholder="Nhập bài làm của bạn tại đây..."></textarea>
@@ -857,7 +872,6 @@
             toggleLoading(false);
         }
 
-        // B. STUDENT: Submit Writing (NEW: Handle Image)
         window.submitWriting = async (assignmentId, assignmentTitle) => {
             const content = get(`sub-content-${assignmentId}`).value;
             const imageUrl = get(`sub-image-${assignmentId}`).value;
@@ -873,7 +887,7 @@
                     studentId: currentUser.uid,
                     studentEmail: currentUser.email,
                     content: content,
-                    imageUrl: imageUrl || null, // Store image URL
+                    imageUrl: imageUrl || null, 
                     score: null,
                     feedback: '',
                     status: 'pending',
@@ -906,21 +920,18 @@
                     const data = docSnap.data();
                     editingLessonId = lessonId;
                     
-                    // Set Form Values
                     get('lesson-title').value = data.title;
                     get('lesson-desc').value = data.desc;
                     get('lesson-image').value = data.image || '';
                     get('lesson-content').value = data.content;
                     get('lesson-video').value = data.video || '';
                     
-                    // Set Vocab
                     const container = get('vocab-input-container');
                     container.innerHTML = '';
                     if (Array.isArray(data.vocabList) && data.vocabList.length > 0) {
                         data.vocabList.forEach(v => addVocabRow(v.word, v.ipa, v.meaning));
                     } else { addVocabRow(); }
                     
-                    // Set Mini Quiz
                     if (data.miniQuiz) {
                         get('lesson-quiz-q').value = data.miniQuiz.question || '';
                         get('lq-a').value = data.miniQuiz.options.A || '';
@@ -933,8 +944,6 @@
                     get('form-title').textContent = "Chỉnh sửa bài giảng";
                     get('form-submit-btn').textContent = "Cập nhật";
                     show('btn-cancel-edit');
-                    
-                    // Set flag to prevent form reset on navigation
                     isEditingMode = true;
                     navigate('teacher-create-lesson');
                 }
@@ -958,7 +967,6 @@
             resetLessonForm(); 
         }
 
-        // CREATE/UPDATE LESSON
         get('create-lesson-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (currentRole !== 'teacher') return;
@@ -973,7 +981,6 @@
                 if(w) vocabData.push({ word: w, ipa: i, meaning: m });
             });
 
-            // Collect Mini Quiz Data
             const qQ = get('lesson-quiz-q').value;
             let miniQuizData = null;
             if (qQ.trim()) {
@@ -996,9 +1003,9 @@
                 content: get('lesson-content').value,
                 vocabList: vocabData,
                 video: get('lesson-video').value,
-                miniQuiz: miniQuizData, // NEW: Save quiz
+                miniQuiz: miniQuizData,
                 author: currentUser.email,
-                updatedAt: new Date() // Always update timestamp
+                updatedAt: new Date()
             };
 
             if (!editingLessonId) lessonData.createdAt = new Date();
@@ -1019,7 +1026,6 @@
 
         // --- LESSON VIEW & PROGRESS ---
 
-        // NEW: Mark/Unmark Lesson Complete
         window.toggleLessonCompletion = async () => {
             const lessonId = get('current-lesson-id').value;
             if (!lessonId || !currentUser) return;
@@ -1030,11 +1036,9 @@
             try {
                 const docSnap = await getDoc(progressRef);
                 if (docSnap.exists() && docSnap.data().completed) {
-                    // Unmark
                     await updateDoc(progressRef, { completed: false });
                     updateCompleteBtnUI(false);
                 } else {
-                    // Mark
                     await setDoc(progressRef, { completed: true, timestamp: new Date() });
                     updateCompleteBtnUI(true);
                     showToast("Đã hoàn thành bài học! +1 Tick");
@@ -1059,11 +1063,9 @@
             const listContainer = get('lesson-list'); listContainer.innerHTML = '';
             
             try {
-                // 1. Get Lessons
                 const q = query(collection(db, PUBLIC_DATA_PATH, "lessons"), orderBy("createdAt", "desc"));
                 const querySnapshot = await getDocs(q);
 
-                // 2. Get User Progress (to show ticks)
                 let progressMap = {};
                 if (currentUser && currentRole === 'student') {
                     const pSnap = await getDocs(collection(db, getUserProgressPath(currentUser.uid)));
@@ -1088,7 +1090,6 @@
                         `;
                     }
 
-                    // Tick UI
                     const isDone = progressMap[doc.id];
                     const tickHtml = isDone ? `<div class="completion-tick"><i class="fa-solid fa-check"></i></div>` : '';
 
@@ -1118,9 +1119,8 @@
                     const data = docSnap.data();
                     hide('view-student-lessons'); show('view-lesson-detail');
                     
-                    get('current-lesson-id').value = lessonId; // Set ID for progress tracking
+                    get('current-lesson-id').value = lessonId; 
 
-                    // Check Progress status
                     if (currentUser) {
                         const pSnap = await getDoc(doc(db, getUserProgressPath(currentUser.uid), lessonId));
                         updateCompleteBtnUI(pSnap.exists() && pSnap.data().completed);
@@ -1134,7 +1134,6 @@
                         get('detail-image').style.backgroundImage = `url('${data.image}')`;
                     } else { get('detail-image').style.display = 'none'; }
                     
-                    // Render Vocab
                     let vocabHtml = '';
                     if (Array.isArray(data.vocabList) && data.vocabList.length > 0) {
                         vocabHtml = `
@@ -1148,12 +1147,10 @@
                     } else { vocabHtml = '<p>Không có từ vựng.</p>'; }
                     get('detail-vocab-container').innerHTML = vocabHtml;
                     
-                    // Render Video (FIXED: Use helper)
                     const embedUrl = getYouTubeEmbedUrl(data.video);
                     if(embedUrl) get('detail-video-container').innerHTML = `<iframe width="100%" height="400" src="${embedUrl}" frameborder="0" allowfullscreen style="border-radius:8px;"></iframe>`;
                     else get('detail-video-container').innerHTML = '';
 
-                    // NEW: Render Mini Quiz
                     const mq = data.miniQuiz;
                     const qBox = get('detail-mini-quiz');
                     if (mq && mq.question) {
@@ -1168,7 +1165,6 @@
                                 btn.className = 'option-btn';
                                 btn.textContent = `${k}. ${mq.options[k]}`;
                                 btn.onclick = () => {
-                                    // Local check
                                     if (k === mq.correct) {
                                         btn.classList.add('correct');
                                         get('mini-quiz-feedback').textContent = "Chính xác!";
@@ -1190,7 +1186,6 @@
             toggleLoading(false);
         }
 
-        // GLOBAL QUIZ LOGIC
         get('create-quiz-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (currentRole !== 'teacher') return;
@@ -1255,7 +1250,6 @@
             }
         }
 
-        // LEADERBOARD LOGIC (Existing)
         async function fetchLeaderboard() {
             toggleLoading(true);
             const tbody = get('leaderboard-body'); tbody.innerHTML='';

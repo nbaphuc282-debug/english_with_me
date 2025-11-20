@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electro Mind - Electrical Engineering Learning - 1.0.6 </title>
+    <title>Electro Mind - Electrical Engineering Learning - 1.0.8 </title>
     
     <!-- Font chữ Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -156,6 +156,15 @@
         .grade-feedback { background: #ecfdf5; border: 1px solid #a7f3d0; padding: 15px; border-radius: 8px; margin-top: 15px; color: #064e3b; }
         .score-display { font-weight: bold; color: var(--success); font-size: 1.2rem; }
 
+        /* Quiz Bank Item */
+        .quiz-bank-item { border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: #fff; display: flex; justify-content: space-between; align-items: flex-start; transition: border-color 0.2s;}
+        .quiz-bank-item:hover { border-color: var(--primary-color); }
+        .quiz-bank-content { flex: 1; margin-right: 20px; }
+        .quiz-bank-question { font-weight: 600; margin-bottom: 8px; color: var(--text-dark); }
+        .quiz-bank-option { font-size: 0.9rem; color: var(--text-light); margin-bottom: 2px; }
+        .quiz-bank-correct { color: var(--success); font-weight: 600; }
+        .quiz-bank-controls { display: flex; gap: 8px; }
+
         /* Vocabulary Table Styles */
         .vocab-table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; }
         .vocab-table th, .vocab-table td { padding: 10px; border: 1px solid #e5e7eb; text-align: left; }
@@ -283,8 +292,9 @@
                     <div class="menu-item active" onclick="navigate('teacher-create-lesson')">
                         <i class="fa-solid fa-pen-to-square"></i> Đăng bài học
                     </div>
+                    <!-- UPDATE: Changed Text -->
                     <div class="menu-item" onclick="navigate('teacher-create-quiz')">
-                        <i class="fa-solid fa-circle-question"></i> Tạo câu hỏi
+                        <i class="fa-solid fa-circle-question"></i> Ngân hàng câu hỏi
                     </div>
                     <div class="menu-item" onclick="navigate('teacher-writing-manage')">
                         <i class="fa-solid fa-clipboard-check"></i> Quản lý Writing
@@ -525,11 +535,14 @@
                     </div>
                 </div>
 
-                <!-- TEACHER: CREATE QUIZ -->
+                <!-- TEACHER: MANAGE QUIZ (UPDATED VIEW) -->
                 <div id="view-teacher-create-quiz" class="view-section hidden">
-                    <h2 class="section-title">Tạo ngân hàng câu hỏi (Game)</h2>
+                    <h2 class="section-title">Ngân hàng câu hỏi</h2>
+                    
+                    <!-- Form -->
                     <div class="card">
-                        <form id="create-quiz-form">
+                        <h3 id="quiz-form-title"><i class="fa-solid fa-plus-circle"></i> Thêm câu hỏi mới</h3>
+                        <form id="create-quiz-form" style="margin-top: 15px;">
                             <div class="input-group">
                                 <label>Câu hỏi</label>
                                 <input type="text" id="quiz-question" class="input-field" required>
@@ -546,8 +559,15 @@
                                     <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
                                 </select>
                             </div>
-                            <button type="submit" class="btn btn-primary">Lưu câu hỏi</button>
+                            <button type="submit" id="btn-submit-quiz" class="btn btn-primary">Lưu câu hỏi</button>
+                            <button type="button" id="btn-cancel-quiz" class="btn btn-outline hidden" onclick="resetQuizForm()">Hủy</button>
                         </form>
+                    </div>
+
+                    <!-- List -->
+                    <h3 style="margin: 30px 0 15px;">Danh sách câu hỏi hiện có</h3>
+                    <div id="quiz-bank-list">
+                        <!-- Fetched items go here -->
                     </div>
                 </div>
 
@@ -585,6 +605,9 @@
         let selectedRoleAuth = 'student';
         let editingLessonId = null;
         let isEditingMode = false;
+        
+        // NEW: Quiz Editing State
+        let editingQuizId = null;
 
         const get = (id) => document.getElementById(id);
         const show = (id) => get(id).classList.remove('hidden');
@@ -646,14 +669,17 @@
                 if (!isEditingMode) resetLessonForm();
                 isEditingMode = false; 
             }
-
-            if (viewId === 'student-lessons') { show('view-student-lessons'); fetchLessons(); }
+            
+            // Reset Quiz form when leaving or entering
+            if (viewId === 'teacher-create-quiz') {
+                resetQuizForm();
+                fetchQuizBank(); // UPDATE: Load questions when view opens
+                show('view-teacher-create-quiz');
+            } else if (viewId === 'student-lessons') { show('view-student-lessons'); fetchLessons(); }
             else if (viewId === 'student-quiz') { show('view-student-quiz'); hide('quiz-play-screen'); show('quiz-start-screen'); }
             else if (viewId === 'leaderboard') { show('view-leaderboard'); fetchLeaderboard(); }
             else if (viewId === 'teacher-create-lesson') { show('view-teacher-create-lesson'); }
-            else if (viewId === 'teacher-create-quiz') { show('view-teacher-create-quiz'); }
             else if (viewId === 'student-writing') { show('view-student-writing'); fetchStudentWriting(); }
-            // UPDATE: Use new fetch function
             else if (viewId === 'teacher-writing-manage') { show('view-teacher-writing-manage'); fetchTeacherWritingDashboard(); }
             else if (viewId === 'view-lesson-detail') { show('view-lesson-detail'); }
             
@@ -724,7 +750,6 @@
             toggleLoading(false);
         });
 
-        // UPDATE: New function to fetch BOTH pending and graded submissions
         window.fetchTeacherWritingDashboard = async () => {
             toggleLoading(true);
             const pendingContainer = get('teacher-pending-list');
@@ -760,8 +785,6 @@
 
                 // 2. Fetch Graded
                 const qGraded = query(collection(db, PUBLIC_DATA_PATH, "writing_submissions"), where("status", "==", "graded"));
-                // Note: Firestore requires index for compound queries (where status + order by date). 
-                // We'll fetch and sort in JS to avoid index errors in this demo environment.
                 const snapGraded = await getDocs(qGraded);
                 
                 if (snapGraded.empty) {
@@ -769,8 +792,6 @@
                 } else {
                     const gradedDocs = [];
                     snapGraded.forEach(doc => gradedDocs.push({id: doc.id, ...doc.data()}));
-                    
-                    // Sort desc by gradedAt
                     gradedDocs.sort((a, b) => (b.gradedAt?.seconds || 0) - (a.gradedAt?.seconds || 0));
 
                     gradedDocs.forEach(d => {
@@ -796,10 +817,6 @@
             } catch(e) { console.error(e); showToast("Lỗi tải danh sách bài làm"); }
             toggleLoading(false);
         }
-        // Keep existing alias for compatibility if called elsewhere, but redirect logic
-        async function fetchTeacherPendingSubmissions() {
-            fetchTeacherWritingDashboard();
-        }
 
         window.openGrading = async (submissionId) => {
             toggleLoading(true);
@@ -821,7 +838,6 @@
                         get('grade-student-image-container').style.display = 'none';
                     }
 
-                    // Pre-fill if graded
                     if (data.status === 'graded') {
                         get('grade-score').value = data.score;
                         get('grade-feedback').value = data.feedback;
@@ -948,7 +964,7 @@
         }
 
 
-        // ---------------- LESSON LOGIC (FIXED & ENHANCED) ----------------
+        // ---------------- LESSON LOGIC ----------------
 
         function resetLessonForm() {
             editingLessonId = null;
@@ -1234,23 +1250,129 @@
             toggleLoading(false);
         }
 
+        // ---------------- QUIZ MANAGER LOGIC ----------------
+
+        // 1. Fetch Questions List
+        window.fetchQuizBank = async () => {
+            toggleLoading(true);
+            const container = get('quiz-bank-list');
+            container.innerHTML = '';
+            try {
+                const q = query(collection(db, PUBLIC_DATA_PATH, "quizzes"), orderBy("createdAt", "desc"));
+                const snap = await getDocs(q);
+                if (snap.empty) {
+                    container.innerHTML = '<p>Ngân hàng câu hỏi trống.</p>';
+                } else {
+                    snap.forEach(doc => {
+                        const d = doc.data();
+                        const div = document.createElement('div');
+                        div.className = 'quiz-bank-item';
+                        div.innerHTML = `
+                            <div class="quiz-bank-content">
+                                <div class="quiz-bank-question">${d.question}</div>
+                                <div class="quiz-bank-option">A: ${d.options.A}</div>
+                                <div class="quiz-bank-option">B: ${d.options.B}</div>
+                                <div class="quiz-bank-option">C: ${d.options.C}</div>
+                                <div class="quiz-bank-option">D: ${d.options.D}</div>
+                                <div style="margin-top:5px; font-size:0.9rem;">Đáp án đúng: <span class="quiz-bank-correct">${d.correct}</span></div>
+                            </div>
+                            <div class="quiz-bank-controls">
+                                <button class="btn btn-warning btn-sm" onclick="editQuizQuestion('${doc.id}')"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteQuizQuestion('${doc.id}')"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        `;
+                        container.appendChild(div);
+                    });
+                }
+            } catch(e) { console.error(e); showToast("Lỗi tải ngân hàng câu hỏi"); }
+            toggleLoading(false);
+        }
+
+        // 2. Edit Quiz Logic
+        window.editQuizQuestion = async (id) => {
+            toggleLoading(true);
+            try {
+                const docSnap = await getDoc(doc(db, PUBLIC_DATA_PATH, "quizzes", id));
+                if (docSnap.exists()) {
+                    const d = docSnap.data();
+                    editingQuizId = id;
+                    
+                    // Fill Form
+                    get('quiz-question').value = d.question;
+                    get('opt-a').value = d.options.A;
+                    get('opt-b').value = d.options.B;
+                    get('opt-c').value = d.options.C;
+                    get('opt-d').value = d.options.D;
+                    get('correct-opt').value = d.correct;
+
+                    // Update UI
+                    get('quiz-form-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa câu hỏi';
+                    get('btn-submit-quiz').textContent = "Cập nhật";
+                    show('btn-cancel-quiz');
+                    
+                    window.scrollTo(0, 0);
+                }
+            } catch(e) { showToast("Lỗi: " + e.message); }
+            toggleLoading(false);
+        }
+
+        // 3. Delete Quiz Logic
+        window.deleteQuizQuestion = async (id) => {
+            if (!confirm("Bạn chắc chắn muốn xóa câu hỏi này?")) return;
+            toggleLoading(true);
+            try {
+                await deleteDoc(doc(db, PUBLIC_DATA_PATH, "quizzes", id));
+                showToast("Đã xóa câu hỏi");
+                fetchQuizBank();
+            } catch(e) { showToast("Lỗi xóa: " + e.message); }
+            toggleLoading(false);
+        }
+
+        // 4. Reset Form
+        window.resetQuizForm = () => {
+            editingQuizId = null;
+            get('create-quiz-form').reset();
+            get('quiz-form-title').innerHTML = '<i class="fa-solid fa-plus-circle"></i> Thêm câu hỏi mới';
+            get('btn-submit-quiz').textContent = "Lưu câu hỏi";
+            hide('btn-cancel-quiz');
+        }
+
+        // 5. Submit Handler (Create/Update)
         get('create-quiz-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (currentRole !== 'teacher') return;
             toggleLoading(true);
+            
+            const quizData = {
+                question: get('quiz-question').value,
+                options: { 
+                    A: get('opt-a').value, 
+                    B: get('opt-b').value, 
+                    C: get('opt-c').value, 
+                    D: get('opt-d').value 
+                },
+                correct: get('correct-opt').value,
+                updatedAt: new Date()
+            };
+            
+            if (!editingQuizId) quizData.createdAt = new Date();
+
             try {
-                await addDoc(collection(db, PUBLIC_DATA_PATH, "quizzes"), {
-                    question: get('quiz-question').value,
-                    options: { A: get('opt-a').value, B: get('opt-b').value, C: get('opt-c').value, D: get('opt-d').value },
-                    correct: get('correct-opt').value,
-                    createdAt: new Date()
-                });
-                showToast("Đã thêm câu hỏi!");
-                get('create-quiz-form').reset();
+                if (editingQuizId) {
+                    await updateDoc(doc(db, PUBLIC_DATA_PATH, "quizzes", editingQuizId), quizData);
+                    showToast("Đã cập nhật câu hỏi!");
+                } else {
+                    await addDoc(collection(db, PUBLIC_DATA_PATH, "quizzes"), quizData);
+                    showToast("Đã thêm câu hỏi mới!");
+                }
+                resetQuizForm();
+                fetchQuizBank();
             } catch (err) { showToast("Lỗi: " + err.message); }
             toggleLoading(false);
         });
 
+
+        // GAME LOGIC (Unchanged)
         let quizQuestions=[], currentQIndex=0, score=0;
         window.startQuiz = async () => {
             toggleLoading(true);

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electro Mind - Electrical Engineering Learning - 1.0.8 </title>
+    <title>Electro Mind - Electrical Engineering Learning - 1.0.9 </title>
     
     <!-- Font chữ Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -19,6 +19,9 @@
             --text-dark: #1f2937;
             --text-light: #6b7280;
             --white: #ffffff;
+            --card-bg: #ffffff;
+            --input-bg: #ffffff;
+            --border-color: #e5e7eb;
             --success: #10b981;
             --warning: #f59e0b; 
             --error: #ef4444;
@@ -27,9 +30,28 @@
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --radius: 12px;
+            --header-bg: #ffffff;
+            --sidebar-bg: #ffffff;
+            --menu-hover: #eff6ff;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        /* DARK MODE VARIABLES */
+        [data-theme="dark"] {
+            --bg-color: #111827;
+            --text-dark: #f9fafb;
+            --text-light: #9ca3af;
+            --white: #1f2937; 
+            --card-bg: #1f2937;
+            --input-bg: #374151;
+            --border-color: #374151;
+            --header-bg: #1f2937;
+            --sidebar-bg: #1f2937;
+            --menu-hover: #374151;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
         body { background-color: var(--bg-color); color: var(--text-dark); line-height: 1.5; }
         
         /* --- UTILITIES --- */
@@ -39,7 +61,7 @@
             display: inline-block; padding: 10px 20px; border-radius: 8px; border: none;
             font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center;
         }
-        .btn-primary { background: var(--gradient-main); color: var(--white); box-shadow: var(--shadow-md); }
+        .btn-primary { background: var(--gradient-main); color: #ffffff; box-shadow: var(--shadow-md); }
         .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-outline { background: transparent; border: 2px solid var(--primary-color); color: var(--primary-color); }
         .btn-success { background-color: var(--success); color: white; }
@@ -53,11 +75,32 @@
         .input-group { margin-bottom: 15px; text-align: left; }
         .input-group label { display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-dark); }
         .input-field {
-            width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px;
-            font-size: 1rem; transition: border-color 0.2s;
+            width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;
+            font-size: 1rem; transition: border-color 0.2s; background-color: var(--input-bg); color: var(--text-dark);
         }
         .input-field:focus { outline: none; border-color: var(--primary-color); ring: 2px solid var(--primary-color); }
         textarea.input-field { resize: vertical; min-height: 100px; }
+        
+        /* RICH TEXT EDITOR STYLES */
+        .rich-editor {
+            min-height: 200px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        .rich-editor img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px auto;
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+        [data-theme="dark"] .rich-editor img { opacity: 0.9; }
+
+        /* Dark mode specific for select inputs */
+        [data-theme="dark"] select.input-field { background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23f9fafb%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); }
 
         /* --- AUTH SCREEN --- */
         #auth-screen {
@@ -69,13 +112,15 @@
             border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
+        [data-theme="dark"] .auth-card { background: rgba(31, 41, 55, 0.95); }
+        
         .logo-text { font-size: 2rem; font-weight: 800; background: var(--gradient-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
-        .role-switch { display: flex; background: #e5e7eb; border-radius: 8px; padding: 4px; margin-bottom: 20px; }
-        .role-btn { flex: 1; padding: 8px; border-radius: 6px; border: none; background: transparent; font-weight: 600; cursor: pointer; }
-        .role-btn.active { background: var(--white); color: var(--primary-color); box-shadow: var(--shadow-sm); }
+        .role-switch { display: flex; background: var(--border-color); border-radius: 8px; padding: 4px; margin-bottom: 20px; }
+        .role-btn { flex: 1; padding: 8px; border-radius: 6px; border: none; background: transparent; font-weight: 600; cursor: pointer; color: var(--text-light); }
+        .role-btn.active { background: var(--card-bg); color: var(--primary-color); box-shadow: var(--shadow-sm); }
 
         /* --- DASHBOARD LAYOUT --- */
-        header { background: var(--white); box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 100; }
+        header { background: var(--header-bg); box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 100; }
         .navbar { display: flex; justify-content: space-between; align-items: center; height: 70px; }
         .nav-logo { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); display: flex; align-items: center; gap: 10px; }
         .user-info { display: flex; align-items: center; gap: 15px; }
@@ -84,17 +129,17 @@
         .main-grid { display: grid; grid-template-columns: 250px 1fr; gap: 30px; padding-top: 30px; padding-bottom: 50px; }
         
         /* Sidebar */
-        .sidebar { background: var(--white); border-radius: var(--radius); padding: 20px; height: fit-content; box-shadow: var(--shadow-sm); }
+        .sidebar { background: var(--sidebar-bg); border-radius: var(--radius); padding: 20px; height: fit-content; box-shadow: var(--shadow-sm); }
         .menu-item {
             display: flex; align-items: center; gap: 10px; padding: 12px 15px;
             color: var(--text-light); cursor: pointer; border-radius: 8px; margin-bottom: 5px; transition: all 0.2s;
         }
-        .menu-item:hover, .menu-item.active { background: #eff6ff; color: var(--primary-color); }
+        .menu-item:hover, .menu-item.active { background: var(--menu-hover); color: var(--primary-color); }
         .menu-item i { width: 20px; text-align: center; }
 
         /* Content Area */
         .content-area { min-height: 500px; }
-        .card { background: var(--white); border-radius: var(--radius); padding: 25px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
+        .card { background: var(--card-bg); border-radius: var(--radius); padding: 25px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
         .section-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; color: var(--text-dark); border-left: 5px solid var(--secondary-color); padding-left: 15px; }
 
         /* --- HERO SECTION --- */
@@ -123,6 +168,9 @@
             text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.15);
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+        [data-theme="dark"] .hero-card { background: rgba(31, 41, 55, 0.9); }
+        [data-theme="dark"] .hero-card h3 { color: #fff; }
+
         .hero-card:hover { transform: translateY(-8px) scale(1.02); }
         .hero-card img { width: 70px; height: 70px; object-fit: contain; margin-bottom: 10px; }
         .hero-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; color: var(--text-dark); }
@@ -134,7 +182,7 @@
 
         /* --- LESSON GRID --- */
         .lesson-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .lesson-card { background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); transition: transform 0.2s; border: 1px solid #e5e7eb; display: flex; flex-direction: column; position: relative; }
+        .lesson-card { background: var(--card-bg); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); transition: transform 0.2s; border: 1px solid var(--border-color); display: flex; flex-direction: column; position: relative; }
         .lesson-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: var(--primary-color); }
         .lesson-img { height: 180px; background-size: cover; background-position: center; background-color: #ddd; display: flex; align-items: center; justify-content: center; position: relative;}
         .lesson-img.no-image { background: var(--gradient-main); }
@@ -142,22 +190,23 @@
         .lesson-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
         .lesson-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; color: var(--text-dark); }
         .lesson-desc { font-size: 0.9rem; color: var(--text-light); margin-bottom: 15px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;}
-        .teacher-controls { display: flex; gap: 10px; margin-top: 10px; border-top: 1px solid #f3f4f6; padding-top: 10px; }
+        .teacher-controls { display: flex; gap: 10px; margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px; }
         .teacher-controls button { flex: 1; }
         .completion-tick { position: absolute; top: 10px; right: 10px; background: var(--success); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
         /* --- WRITING ASSIGNMENT STYLES --- */
-        .writing-item { border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 15px; transition: all 0.2s; background: #fff; }
+        .writing-item { border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 15px; transition: all 0.2s; background: var(--card-bg); }
         .writing-item:hover { box-shadow: var(--shadow-sm); border-color: var(--primary-color); }
         .writing-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
         .writing-title { font-weight: 700; font-size: 1.1rem; color: var(--text-dark); }
         .writing-meta { font-size: 0.85rem; color: var(--text-light); margin-bottom: 15px; }
-        .submission-box { background: #f9fafb; border-radius: 8px; padding: 15px; border: 1px dashed #ccc; margin-top: 15px; }
+        .submission-box { background: var(--bg-color); border-radius: 8px; padding: 15px; border: 1px dashed var(--border-color); margin-top: 15px; }
         .grade-feedback { background: #ecfdf5; border: 1px solid #a7f3d0; padding: 15px; border-radius: 8px; margin-top: 15px; color: #064e3b; }
+        [data-theme="dark"] .grade-feedback { background: #064e3b; border-color: #059669; color: #a7f3d0; }
         .score-display { font-weight: bold; color: var(--success); font-size: 1.2rem; }
 
         /* Quiz Bank Item */
-        .quiz-bank-item { border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: #fff; display: flex; justify-content: space-between; align-items: flex-start; transition: border-color 0.2s;}
+        .quiz-bank-item { border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; background: var(--card-bg); display: flex; justify-content: space-between; align-items: flex-start; transition: border-color 0.2s;}
         .quiz-bank-item:hover { border-color: var(--primary-color); }
         .quiz-bank-content { flex: 1; margin-right: 20px; }
         .quiz-bank-question { font-weight: 600; margin-bottom: 8px; color: var(--text-dark); }
@@ -166,40 +215,45 @@
         .quiz-bank-controls { display: flex; gap: 8px; }
 
         /* Vocabulary Table Styles */
-        .vocab-table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; }
-        .vocab-table th, .vocab-table td { padding: 10px; border: 1px solid #e5e7eb; text-align: left; }
-        .vocab-table th { background: #f3f4f6; font-weight: 600; color: var(--text-dark); }
+        .vocab-table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid var(--border-color); }
+        .vocab-table th, .vocab-table td { padding: 10px; border: 1px solid var(--border-color); text-align: left; }
+        .vocab-table th { background: var(--bg-color); font-weight: 600; color: var(--text-dark); }
         .vocab-row-input { display: grid; grid-template-columns: 1fr 1fr 1fr 40px; gap: 10px; margin-bottom: 10px; align-items: center;}
         
         /* Loading & Toast */
         #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 999; }
+        [data-theme="dark"] #loading-overlay { background: rgba(17, 24, 39, 0.8); }
         .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; }
+        [data-theme="dark"] .spinner { border-color: #374151; border-top-color: var(--primary-color); }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         .toast {
             position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; background: var(--text-dark);
-            color: white; border-radius: 8px; box-shadow: var(--shadow-md); opacity: 0; transition: opacity 0.3s; z-index: 1000;
+            color: var(--bg-color); border-radius: 8px; box-shadow: var(--shadow-md); opacity: 0; transition: opacity 0.3s; z-index: 1000;
         }
         .toast.show { opacity: 1; }
         
         /* Quiz & Leaderboard */
         .quiz-container { max-width: 800px; margin: 0 auto; text-align: center; }
-        .question-box { font-size: 1.2rem; font-weight: 600; margin: 30px 0; }
+        .question-box { font-size: 1.2rem; font-weight: 600; margin: 30px 0; color: var(--text-dark); }
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .option-btn {
-            padding: 20px; border: 2px solid #e5e7eb; border-radius: 10px; background: var(--white);
-            font-size: 1rem; cursor: pointer; transition: all 0.2s;
+            padding: 20px; border: 2px solid var(--border-color); border-radius: 10px; background: var(--card-bg);
+            font-size: 1rem; cursor: pointer; transition: all 0.2s; color: var(--text-dark);
         }
-        .option-btn:hover:not(.disabled) { background: #eff6ff; border-color: var(--primary-color); }
+        .option-btn:hover:not(.disabled) { background: var(--menu-hover); border-color: var(--primary-color); }
         .option-btn.correct { background: #d1fae5 !important; border-color: var(--success) !important; color: #065f46; }
+        [data-theme="dark"] .option-btn.correct { background: #064e3b !important; color: #a7f3d0; border-color: #059669 !important; }
         .option-btn.wrong { background: #fee2e2 !important; border-color: var(--error) !important; color: #991b1b; }
+        [data-theme="dark"] .option-btn.wrong { background: #7f1d1d !important; color: #fca5a5; border-color: #b91c1c !important; }
         
         /* Mini Lesson Quiz */
         .mini-quiz-box { margin-top: 30px; padding: 20px; border: 2px solid #e0e7ff; border-radius: 12px; background: #f5f7ff; }
+        [data-theme="dark"] .mini-quiz-box { background: #1e293b; border-color: #374151; }
 
         .leaderboard-table { width: 100%; border-collapse: collapse; }
-        .leaderboard-table th { text-align: left; padding: 15px; background: #f9fafb; color: var(--text-light); font-size: 0.85rem; text-transform: uppercase; }
-        .leaderboard-table td { padding: 15px; border-bottom: 1px solid #e5e7eb; }
+        .leaderboard-table th { text-align: left; padding: 15px; background: var(--bg-color); color: var(--text-light); font-size: 0.85rem; text-transform: uppercase; }
+        .leaderboard-table td { padding: 15px; border-bottom: 1px solid var(--border-color); color: var(--text-dark); }
         .rank-1 { color: #fbbf24; font-weight: bold; }
         .rank-2 { color: #9ca3af; font-weight: bold; }
         .rank-3 { color: #b45309; font-weight: bold; }
@@ -263,6 +317,9 @@
                     <span>Electro Mind</span>
                 </div>
                 <div class="user-info">
+                    <button onclick="toggleTheme()" class="btn btn-outline" style="padding: 5px 10px; border: 1px solid var(--border-color);" title="Giao diện Sáng/Tối">
+                        <i id="theme-icon" class="fa-solid fa-moon"></i>
+                    </button>
                     <span class="user-badge" id="user-badge">Student</span>
                     <span id="user-email" style="font-weight: 600; display: none; md:block;">user@email.com</span>
                     <button onclick="handleLogout()" class="btn btn-outline" style="padding: 5px 10px; font-size: 0.9rem;"><i class="fa-solid fa-right-from-bracket"></i></button>
@@ -292,7 +349,6 @@
                     <div class="menu-item active" onclick="navigate('teacher-create-lesson')">
                         <i class="fa-solid fa-pen-to-square"></i> Đăng bài học
                     </div>
-                    <!-- UPDATE: Changed Text -->
                     <div class="menu-item" onclick="navigate('teacher-create-quiz')">
                         <i class="fa-solid fa-circle-question"></i> Ngân hàng câu hỏi
                     </div>
@@ -347,17 +403,18 @@
                         <input type="hidden" id="current-lesson-id">
                         <div id="detail-image" style="width:100%; height:300px; background-size:cover; background-position:center; border-radius:8px; margin-bottom:20px; display:none;"></div>
                         <h1 id="detail-title" style="color: var(--primary-color); margin-bottom: 10px;">Unit Title</h1>
-                        <div style="border-bottom: 1px solid #eee; margin-bottom: 20px;"></div>
+                        <div style="border-bottom: 1px solid var(--border-color); margin-bottom: 20px;"></div>
                         <h3 style="margin-bottom: 10px;"><i class="fa-solid fa-language"></i> Vocabulary</h3>
                         <div id="detail-vocab-container" style="margin-bottom: 20px;"></div>
                         <h3 style="margin-bottom: 10px;"><i class="fa-solid fa-file-lines"></i> Content</h3>
-                        <div id="detail-content" style="line-height: 1.8; margin-bottom: 20px; white-space: pre-wrap;"></div>
+                        <!-- UPDATED: Change style to support rich text view -->
+                        <div id="detail-content" class="rich-editor" style="margin-bottom: 20px;"></div>
                         <div id="detail-video-container"></div>
                         
                         <!-- Mini Quiz Section -->
                         <div id="detail-mini-quiz" class="mini-quiz-box hidden">
                             <h4 style="color: var(--primary-color); margin-bottom:10px;"><i class="fa-solid fa-puzzle-piece"></i> Quiz ôn tập</h4>
-                            <p id="mini-quiz-q" style="font-weight: bold; margin-bottom: 10px;"></p>
+                            <p id="mini-quiz-q" style="font-weight: bold; margin-bottom: 10px; color: var(--text-dark);"></p>
                             <div id="mini-quiz-options" class="options-grid"></div>
                             <p id="mini-quiz-feedback" style="margin-top: 10px; font-weight: bold;"></p>
                         </div>
@@ -390,7 +447,7 @@
                         </form>
                     </div>
 
-                    <!-- UPDATE: Split into Pending and Graded lists -->
+                    <!-- Split into Pending and Graded lists -->
                     <h3 style="margin: 30px 0 15px; color: var(--warning);"><i class="fa-solid fa-hourglass-half"></i> Bài cần chấm (Pending)</h3>
                     <div id="teacher-pending-list">
                         <!-- Pending submissions injected here -->
@@ -407,13 +464,13 @@
                     <button onclick="navigate('teacher-writing-manage')" class="btn btn-outline" style="margin-bottom: 20px;">&larr; Quay lại danh sách</button>
                     <h2 class="section-title">Chấm bài</h2>
                     <div class="card">
-                        <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #bae6fd;">
+                        <div style="background: var(--menu-hover); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color);">
                             <h4 id="grade-assignment-title" style="margin-bottom: 5px;">Assignment Title</h4>
                             <p id="grade-student-email" style="color: var(--text-light); font-style: italic;">Student Email</p>
                         </div>
                         
                         <h4>Bài làm của sinh viên:</h4>
-                        <div id="grade-student-content" style="background: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 20px; white-space: pre-wrap; min-height: 100px;"></div>
+                        <div id="grade-student-content" style="background: var(--bg-color); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; white-space: pre-wrap; min-height: 100px;"></div>
                         
                         <div id="grade-student-image-container" style="margin-bottom: 20px; display: none;">
                              <p><strong>Ảnh minh họa:</strong></p>
@@ -449,7 +506,7 @@
                                 <span style="font-weight: bold;">Điểm: <span id="current-score" style="color: var(--primary-color);">0</span></span>
                                 <span>Câu hỏi: <span id="question-counter">1</span>/10</span>
                             </div>
-                            <div class="progress-bar" style="width: 100%; height: 6px; background: #eee; border-radius: 3px; margin-bottom: 20px;">
+                            <div class="progress-bar" style="width: 100%; height: 6px; background: var(--border-color); border-radius: 3px; margin-bottom: 20px;">
                                 <div id="quiz-progress" style="width: 0%; height: 100%; background: var(--success); border-radius: 3px;"></div>
                             </div>
                             <div id="question-text" class="question-box"></div>
@@ -490,14 +547,19 @@
                                 <label>Hình ảnh minh họa (URL)</label>
                                 <input type="url" id="lesson-image" class="input-field" placeholder="https://example.com/image.jpg">
                             </div>
+                            
+                            <!-- UPDATED: Rich Text Editor Div instead of Textarea -->
                             <div class="input-group">
                                 <label>Nội dung chi tiết (Essay/Theory)</label>
-                                <textarea id="lesson-content" class="input-field" rows="6" placeholder="Nhập nội dung bài giảng..." required></textarea>
+                                <div style="border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg);">
+                                    <div id="lesson-content-editor" class="input-field rich-editor" contenteditable="true" style="border:none; min-height: 200px;"></div>
+                                </div>
+                                <small style="color: var(--text-light); font-style: italic;">Mẹo: Bạn có thể dán hình ảnh (Ctrl+V) trực tiếp vào khung soạn thảo trên.</small>
                             </div>
                             
                             <div class="input-group">
                                 <label>Từ vựng (Vocabulary)</label>
-                                <div style="background: #f9fafb; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px;">
+                                <div style="background: var(--menu-hover); padding: 15px; border: 1px solid var(--border-color); border-radius: 8px;">
                                     <div id="vocab-input-container"></div>
                                     <button type="button" class="btn btn-outline btn-sm" onclick="addVocabRow()">
                                         <i class="fa-solid fa-plus"></i> Thêm từ vựng
@@ -508,11 +570,11 @@
                             <div class="input-group">
                                 <label>Link Video (Youtube)</label>
                                 <input type="text" id="lesson-video" class="input-field" placeholder="https://www.youtube.com/watch?v=...">
-                                <small style="color: #666;">Hệ thống sẽ tự động chuyển đổi link video.</small>
+                                <small style="color: var(--text-light);">Hệ thống sẽ tự động chuyển đổi link video.</small>
                             </div>
 
                             <!-- MINI QUIZ INPUT -->
-                            <div class="input-group" style="margin-top: 20px; padding-top: 20px; border-top: 2px dashed #eee;">
+                            <div class="input-group" style="margin-top: 20px; padding-top: 20px; border-top: 2px dashed var(--border-color);">
                                 <label style="color: var(--primary-color);"><i class="fa-solid fa-puzzle-piece"></i> Mini Quiz (Cuối bài học)</label>
                                 <input type="text" id="lesson-quiz-q" class="input-field" placeholder="Câu hỏi quiz..." style="margin-bottom: 10px;">
                                 <div class="options-grid" style="margin-bottom: 10px;">
@@ -605,8 +667,6 @@
         let selectedRoleAuth = 'student';
         let editingLessonId = null;
         let isEditingMode = false;
-        
-        // NEW: Quiz Editing State
         let editingQuizId = null;
 
         const get = (id) => document.getElementById(id);
@@ -618,6 +678,33 @@
             setTimeout(() => t.classList.remove('show'), 3000);
         }
         
+        // --- THEME TOGGLE LOGIC ---
+        const htmlEl = document.documentElement;
+        
+        window.toggleTheme = () => {
+            const current = htmlEl.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            htmlEl.setAttribute('data-theme', next);
+            localStorage.setItem('electro_theme', next);
+            updateThemeIcon(next);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('theme-icon');
+            if(theme === 'dark') {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+        
+        // Init Theme
+        const savedTheme = localStorage.getItem('electro_theme') || 'light';
+        htmlEl.setAttribute('data-theme', savedTheme);
+
+        // --- AUTH & INIT ---
         const initAuth = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 try {
@@ -628,6 +715,35 @@
             }
         };
         initAuth();
+
+        window.addEventListener('DOMContentLoaded', () => { 
+            addVocabRow(); 
+            updateThemeIcon(savedTheme); 
+            
+            // SETUP PASTE LISTENER FOR IMAGE
+            const editor = get('lesson-content-editor');
+            if(editor) {
+                editor.addEventListener('paste', (e) => {
+                    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                    let blob = null;
+                    for (let i = 0; i < items.length; i++) {
+                        if (items[i].type.indexOf("image") === 0) {
+                            blob = items[i].getAsFile();
+                            e.preventDefault(); // Prevent default paste behaviour
+                            break;
+                        }
+                    }
+                    if (blob) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const img = `<img src="${event.target.result}" style="max-width:100%;">`;
+                            document.execCommand('insertHTML', false, img);
+                        };
+                        reader.readAsDataURL(blob);
+                    }
+                });
+            }
+        });
 
         window.scrollToLessons = () => {
             const el = get('lesson-anchor');
@@ -653,7 +769,6 @@
             `;
             container.appendChild(div);
         }
-        window.addEventListener('DOMContentLoaded', () => { addVocabRow(); });
 
         window.switchAuthRole = (role) => {
             selectedRoleAuth = role;
@@ -670,10 +785,9 @@
                 isEditingMode = false; 
             }
             
-            // Reset Quiz form when leaving or entering
             if (viewId === 'teacher-create-quiz') {
                 resetQuizForm();
-                fetchQuizBank(); // UPDATE: Load questions when view opens
+                fetchQuizBank();
                 show('view-teacher-create-quiz');
             } else if (viewId === 'student-lessons') { show('view-student-lessons'); fetchLessons(); }
             else if (viewId === 'student-quiz') { show('view-student-quiz'); hide('quiz-play-screen'); show('quiz-start-screen'); }
@@ -758,7 +872,6 @@
             gradedContainer.innerHTML = '';
 
             try {
-                // 1. Fetch Pending
                 const qPending = query(collection(db, PUBLIC_DATA_PATH, "writing_submissions"), where("status", "==", "pending"));
                 const snapPending = await getDocs(qPending);
                 
@@ -783,7 +896,6 @@
                     });
                 }
 
-                // 2. Fetch Graded
                 const qGraded = query(collection(db, PUBLIC_DATA_PATH, "writing_submissions"), where("status", "==", "graded"));
                 const snapGraded = await getDocs(qGraded);
                 
@@ -915,7 +1027,7 @@
                             contentHtml += `
                                 <div class="submission-box">
                                     <p><strong>Bài làm của bạn:</strong></p>
-                                    <p style="white-space:pre-wrap; color:#4b5563;">${submission.content}</p>
+                                    <p style="white-space:pre-wrap; color:var(--text-light);">${submission.content}</p>
                                     ${submission.imageUrl ? `<p style="margin-top:10px;"><strong>Ảnh minh họa:</strong> <a href="${submission.imageUrl}" target="_blank">Xem ảnh</a></p>` : ''}
                                 </div>
                             `;
@@ -963,12 +1075,12 @@
             toggleLoading(false);
         }
 
-
         // ---------------- LESSON LOGIC ----------------
 
         function resetLessonForm() {
             editingLessonId = null;
             get('create-lesson-form').reset();
+            get('lesson-content-editor').innerHTML = ''; // Clear rich editor
             get('form-title').textContent = "Soạn bài giảng mới";
             get('form-submit-btn').textContent = "Đăng bài";
             hide('btn-cancel-edit');
@@ -987,7 +1099,10 @@
                     get('lesson-title').value = data.title;
                     get('lesson-desc').value = data.desc;
                     get('lesson-image').value = data.image || '';
-                    get('lesson-content').value = data.content;
+                    
+                    // Set content for Rich Editor
+                    get('lesson-content-editor').innerHTML = data.content;
+                    
                     get('lesson-video').value = data.video || '';
                     
                     const container = get('vocab-input-container');
@@ -1036,6 +1151,9 @@
             if (currentRole !== 'teacher') return;
             toggleLoading(true);
             
+            // Get Rich Content
+            const richContent = get('lesson-content-editor').innerHTML;
+
             const vocabRows = document.querySelectorAll('.vocab-row-input');
             let vocabData = [];
             vocabRows.forEach(row => {
@@ -1064,7 +1182,7 @@
                 title: get('lesson-title').value,
                 desc: get('lesson-desc').value,
                 image: get('lesson-image').value,
-                content: get('lesson-content').value,
+                content: richContent, // Store HTML content
                 vocabList: vocabData,
                 video: get('lesson-video').value,
                 miniQuiz: miniQuizData,
@@ -1191,7 +1309,8 @@
                     }
 
                     get('detail-title').textContent = data.title;
-                    get('detail-content').textContent = data.content;
+                    // Use innerHTML to render HTML content (text + images)
+                    get('detail-content').innerHTML = data.content;
                     
                     if (data.image) {
                         get('detail-image').style.display = 'block';
@@ -1252,7 +1371,6 @@
 
         // ---------------- QUIZ MANAGER LOGIC ----------------
 
-        // 1. Fetch Questions List
         window.fetchQuizBank = async () => {
             toggleLoading(true);
             const container = get('quiz-bank-list');
@@ -1288,7 +1406,6 @@
             toggleLoading(false);
         }
 
-        // 2. Edit Quiz Logic
         window.editQuizQuestion = async (id) => {
             toggleLoading(true);
             try {
@@ -1297,7 +1414,6 @@
                     const d = docSnap.data();
                     editingQuizId = id;
                     
-                    // Fill Form
                     get('quiz-question').value = d.question;
                     get('opt-a').value = d.options.A;
                     get('opt-b').value = d.options.B;
@@ -1305,7 +1421,6 @@
                     get('opt-d').value = d.options.D;
                     get('correct-opt').value = d.correct;
 
-                    // Update UI
                     get('quiz-form-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa câu hỏi';
                     get('btn-submit-quiz').textContent = "Cập nhật";
                     show('btn-cancel-quiz');
@@ -1316,7 +1431,6 @@
             toggleLoading(false);
         }
 
-        // 3. Delete Quiz Logic
         window.deleteQuizQuestion = async (id) => {
             if (!confirm("Bạn chắc chắn muốn xóa câu hỏi này?")) return;
             toggleLoading(true);
@@ -1328,7 +1442,6 @@
             toggleLoading(false);
         }
 
-        // 4. Reset Form
         window.resetQuizForm = () => {
             editingQuizId = null;
             get('create-quiz-form').reset();
@@ -1337,7 +1450,6 @@
             hide('btn-cancel-quiz');
         }
 
-        // 5. Submit Handler (Create/Update)
         get('create-quiz-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (currentRole !== 'teacher') return;
@@ -1371,8 +1483,7 @@
             toggleLoading(false);
         });
 
-
-        // GAME LOGIC (Unchanged)
+        // GAME LOGIC
         let quizQuestions=[], currentQIndex=0, score=0;
         window.startQuiz = async () => {
             toggleLoading(true);

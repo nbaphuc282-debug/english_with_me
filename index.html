@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electro Mind - Electrical Engineering Learning - 1.1.3 </title>
+    <title>Electro Mind - Electrical Engineering Learning - 1.1.4 </title>
     
     <!-- Font chữ Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -207,14 +207,17 @@
 
         /* Assignment List Card */
         .assignment-card {
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: space-between; align-items: flex-start;
             background: var(--card-bg); padding: 20px; margin-bottom: 15px;
             border: 1px solid var(--border-color); border-radius: 8px;
             transition: transform 0.2s;
         }
         .assignment-card:hover { transform: translateX(5px); border-color: var(--primary-color); }
-        .assign-info h4 { color: var(--text-dark); margin-bottom: 5px; }
+        .assign-info { flex: 1; margin-right: 15px; }
+        .assign-info h4 { color: var(--text-dark); margin-bottom: 5px; font-weight: 700; }
         .assign-info p { color: var(--text-light); font-size: 0.9rem; margin: 0; }
+        .assign-actions { display: flex; flex-direction: column; gap: 5px; }
+        .assign-btns { display: flex; gap: 5px; }
 
         /* Quiz Bank Item */
         .quiz-bank-item { border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; background: var(--card-bg); display: flex; justify-content: space-between; align-items: flex-start; transition: border-color 0.2s;}
@@ -447,7 +450,7 @@
                     
                     <!-- Create Assignment -->
                     <div class="card">
-                        <h3><i class="fa-solid fa-plus-circle"></i> Tạo đề bài mới</h3>
+                        <h3 id="writing-form-title"><i class="fa-solid fa-plus-circle"></i> Tạo đề bài mới</h3>
                         <form id="create-writing-form" style="margin-top:15px;">
                             <div class="input-group">
                                 <label>Tiêu đề bài tập</label>
@@ -457,7 +460,10 @@
                                 <label>Yêu cầu đề bài (Prompt)</label>
                                 <textarea id="writing-desc" class="input-field" rows="3" placeholder="Mô tả yêu cầu..." required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary">Giao bài</button>
+                            <div style="display:flex; gap:10px;">
+                                <button type="submit" id="btn-submit-writing" class="btn btn-primary">Giao bài</button>
+                                <button type="button" id="btn-cancel-writing" class="btn btn-outline hidden" onclick="cancelEditAssignment()">Hủy</button>
+                            </div>
                         </form>
                     </div>
 
@@ -692,6 +698,7 @@
         let editingLessonId = null;
         let isEditingMode = false;
         let editingQuizId = null;
+        let editingAssignmentId = null;
 
         const get = (id) => document.getElementById(id);
         const show = (id) => get(id).classList.remove('hidden');
@@ -826,7 +833,12 @@
             else if (viewId === 'leaderboard') { show('view-leaderboard'); fetchLeaderboard(); }
             else if (viewId === 'teacher-create-lesson') { show('view-teacher-create-lesson'); }
             else if (viewId === 'student-writing') { show('view-student-writing'); fetchStudentWriting(); }
-            else if (viewId === 'teacher-writing-manage') { show('view-teacher-writing-manage'); fetchTeacherWritingDashboard(); fetchTeacherAssignments(); }
+            else if (viewId === 'teacher-writing-manage') { 
+                show('view-teacher-writing-manage'); 
+                fetchTeacherWritingDashboard(); 
+                fetchTeacherAssignments(); 
+                cancelEditAssignment(); // Reset form on entry
+            }
             else if (viewId === 'view-lesson-detail') { show('view-lesson-detail'); }
             
             const activeMenu = document.querySelector(`.menu-item[onclick="navigate('${viewId}')"]`);
@@ -880,15 +892,27 @@
             e.preventDefault();
             if (currentRole !== 'teacher') return;
             toggleLoading(true);
+            
+            const assignmentData = {
+                title: get('writing-title').value,
+                description: get('writing-desc').value,
+                createdBy: currentUser.uid,
+                createdAt: new Date()
+            };
+
             try {
-                await addDoc(collection(db, PUBLIC_DATA_PATH, "writing_assignments"), {
-                    title: get('writing-title').value,
-                    description: get('writing-desc').value,
-                    createdBy: currentUser.uid,
-                    createdAt: new Date()
-                });
-                showToast("Đã giao bài tập mới!");
-                get('create-writing-form').reset();
+                if (editingAssignmentId) {
+                    // Update Existing
+                    delete assignmentData.createdAt; // Don't overwrite creation time
+                    assignmentData.updatedAt = new Date();
+                    await updateDoc(doc(db, PUBLIC_DATA_PATH, "writing_assignments", editingAssignmentId), assignmentData);
+                    showToast("Đã cập nhật đề bài!");
+                } else {
+                    // Create New
+                    await addDoc(collection(db, PUBLIC_DATA_PATH, "writing_assignments"), assignmentData);
+                    showToast("Đã giao bài tập mới!");
+                }
+                cancelEditAssignment(); // Reset Form
                 fetchTeacherAssignments(); // Refresh list
             } catch (err) { showToast("Lỗi: " + err.message); }
             toggleLoading(false);
@@ -936,12 +960,59 @@
                                 <p>${d.description.substring(0, 60)}${d.description.length>60?'...':''}</p>
                                 <p style="font-size:0.8rem; margin-top:5px;">Ngày tạo: ${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString() : 'N/A'}</p>
                             </div>
-                            <button class="btn btn-outline btn-sm" onclick="openAssignmentDetail('${doc.id}')">Xem chi tiết &rarr;</button>
+                            <div class="assign-actions">
+                                <button class="btn btn-outline btn-sm" onclick="openAssignmentDetail('${doc.id}')" style="width:100%">Xem chi tiết &rarr;</button>
+                                <div class="assign-btns">
+                                    <button class="btn btn-warning btn-sm" style="flex:1" onclick="editAssignment('${doc.id}')" title="Chỉnh sửa"><i class="fa-solid fa-pen"></i></button>
+                                    <button class="btn btn-danger btn-sm" style="flex:1" onclick="deleteAssignment('${doc.id}')" title="Xóa đề"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
                         `;
                         container.appendChild(div);
                     });
                 }
             } catch(e) { console.error(e); }
+        }
+
+        // CRUD FOR ASSIGNMENTS
+        window.editAssignment = async (id) => {
+            toggleLoading(true);
+            try {
+                const docSnap = await getDoc(doc(db, PUBLIC_DATA_PATH, "writing_assignments", id));
+                if(docSnap.exists()) {
+                    const d = docSnap.data();
+                    editingAssignmentId = id;
+                    get('writing-title').value = d.title;
+                    get('writing-desc').value = d.description;
+                    
+                    // UI Updates
+                    get('writing-form-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Cập nhật đề bài';
+                    get('btn-submit-writing').textContent = "Cập nhật";
+                    show('btn-cancel-writing');
+                    
+                    window.scrollTo(0, 0);
+                }
+            } catch(e) { showToast("Lỗi: " + e.message); }
+            toggleLoading(false);
+        }
+
+        window.deleteAssignment = async (id) => {
+            if(!confirm("CẢNH BÁO: Xóa đề bài này sẽ không xóa các bài nộp của sinh viên, nhưng đề bài sẽ biến mất khỏi danh sách. Bạn có chắc chắn?")) return;
+            toggleLoading(true);
+            try {
+                await deleteDoc(doc(db, PUBLIC_DATA_PATH, "writing_assignments", id));
+                showToast("Đã xóa đề bài.");
+                fetchTeacherAssignments();
+            } catch(e) { showToast("Lỗi xóa: " + e.message); }
+            toggleLoading(false);
+        }
+
+        window.cancelEditAssignment = () => {
+            editingAssignmentId = null;
+            get('create-writing-form').reset();
+            get('writing-form-title').innerHTML = '<i class="fa-solid fa-plus-circle"></i> Tạo đề bài mới';
+            get('btn-submit-writing').textContent = "Giao bài";
+            hide('btn-cancel-writing');
         }
 
         // 3. NEW: Open Assignment Detail (Submissions)

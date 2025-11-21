@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electro Mind - Electrical Engineering Learning - 1.1.6 </title>
+    <title>Electro Mind - Electrical Engineering Learning - 1.1.7 </title>
     
     <!-- Font chữ Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -1665,6 +1665,14 @@
         async function fetchLeaderboard() {
             toggleLoading(true);
             const tbody = get('leaderboard-body'); tbody.innerHTML='';
+            
+            // FIX: Show reset button if teacher
+            if (currentRole === 'teacher') {
+                show('btn-reset-leaderboard');
+            } else {
+                hide('btn-reset-leaderboard');
+            }
+
             try {
                 const quizSnap = await getDocs(collection(db, PUBLIC_DATA_PATH, "scores"));
                 const writingSnap = await getDocs(query(collection(db, PUBLIC_DATA_PATH, "writing_submissions"), where("status", "==", "graded")));

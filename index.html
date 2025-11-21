@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electro Mind - Electrical Engineering Learning 1.1.2</title>
+    <title>Electro Mind - Electrical Engineering Learning - 1.1.3 </title>
     
     <!-- Font chữ Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -994,7 +994,110 @@
             toggleLoading(false);
         }
 
-        window.fetchStudentWriting = async () => { /* ... Logic unchanged ... */ };
+        // FIX: IMPLEMENTED STUDENT FETCH WRITING
+        window.fetchStudentWriting = async () => { 
+            toggleLoading(true);
+            const container = get('student-writing-list');
+            container.innerHTML = '';
+            try {
+                // 1. Get All Assignments
+                const assignSnap = await getDocs(query(collection(db, PUBLIC_DATA_PATH, "writing_assignments"), orderBy("createdAt", "desc")));
+                
+                // 2. Get My Submissions
+                const mySubSnap = await getDocs(query(collection(db, PUBLIC_DATA_PATH, "writing_submissions"), where("studentId", "==", currentUser.uid)));
+                const mySubs = {};
+                mySubSnap.forEach(doc => { mySubs[doc.data().assignmentId] = doc.data(); });
+
+                if(assignSnap.empty) {
+                    container.innerHTML = '<p class="text-light">Chưa có bài tập nào được giao.</p>';
+                } else {
+                    assignSnap.forEach(doc => {
+                        const a = doc.data();
+                        const assignId = doc.id;
+                        const submission = mySubs[assignId];
+
+                        const div = document.createElement('div');
+                        div.className = 'writing-item';
+                        
+                        // Determine Status Badge
+                        let statusBadge = '<span class="badge" style="background:#9ca3af">Chưa nộp</span>';
+                        if(submission) {
+                            statusBadge = submission.status === 'graded' 
+                                ? '<span class="badge badge-graded">Đã chấm</span>' 
+                                : '<span class="badge badge-pending">Đang chờ chấm</span>';
+                        }
+
+                        let contentHtml = `
+                            <div class="writing-header">
+                                <div class="writing-title">${a.title}</div>
+                                ${statusBadge}
+                            </div>
+                            <p style="margin-bottom:10px;">${a.description}</p>
+                        `;
+
+                        if (!submission) {
+                            // Submission Form
+                            contentHtml += `
+                                <div class="submission-box">
+                                    <textarea id="sub-content-${assignId}" class="input-field" rows="4" placeholder="Nhập bài làm của bạn tại đây..."></textarea>
+                                    <div class="input-group" style="margin-top:10px;">
+                                        <input type="url" id="sub-image-${assignId}" class="input-field" placeholder="Link ảnh minh họa (tùy chọn)...">
+                                    </div>
+                                    <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="submitWriting('${assignId}', '${a.title}')">Nộp bài</button>
+                                </div>
+                            `;
+                        } else {
+                            // View Submission & Feedback
+                            contentHtml += `
+                                <div class="submission-box">
+                                    <p><strong>Bài làm của bạn:</strong></p>
+                                    <p style="white-space:pre-wrap; color:var(--text-light);">${submission.content}</p>
+                                    ${submission.imageUrl ? `<p style="margin-top:10px;"><strong>Ảnh minh họa:</strong> <a href="${submission.imageUrl}" target="_blank" style="color:var(--primary-color)">Xem ảnh</a></p>` : ''}
+                                </div>
+                            `;
+                            if (submission.status === 'graded') {
+                                contentHtml += `
+                                    <div class="grade-feedback">
+                                        <p style="font-size:1.1rem;"><strong>Điểm số: ${submission.score}/100</strong></p>
+                                        <p><strong>Lời phê của GV:</strong> ${submission.feedback}</p>
+                                    </div>
+                                `;
+                            }
+                        }
+                        div.innerHTML = contentHtml;
+                        container.appendChild(div);
+                    });
+                }
+            } catch(e) { console.error(e); showToast("Lỗi tải bài tập: " + e.message); }
+            toggleLoading(false);
+        };
+
+        window.submitWriting = async (assignmentId, assignmentTitle) => {
+            const content = get(`sub-content-${assignmentId}`).value;
+            const imageUrl = get(`sub-image-${assignmentId}`).value;
+            if(!content.trim()) return showToast("Vui lòng nhập nội dung!");
+            
+            if(!confirm("Bạn có chắc muốn nộp bài? Không thể sửa sau khi nộp.")) return;
+
+            toggleLoading(true);
+            try {
+                await addDoc(collection(db, PUBLIC_DATA_PATH, "writing_submissions"), {
+                    assignmentId: assignmentId,
+                    assignmentTitle: assignmentTitle,
+                    studentId: currentUser.uid,
+                    studentEmail: currentUser.email,
+                    content: content,
+                    imageUrl: imageUrl || null, 
+                    score: null,
+                    feedback: '',
+                    status: 'pending',
+                    createdAt: new Date()
+                });
+                showToast("Nộp bài thành công!");
+                fetchStudentWriting();
+            } catch(e) { showToast("Lỗi nộp bài: " + e.message); }
+            toggleLoading(false);
+        }
 
         window.openGrading = async (submissionId) => {
             toggleLoading(true);

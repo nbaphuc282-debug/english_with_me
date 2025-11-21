@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electro Mind - Electrical Engineering Learning - 1.1.0</title>
+    <title>Electro Mind - Electrical Engineering Learning - 1.1.1 </title>
     
     <!-- Font chữ Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -205,6 +205,17 @@
         [data-theme="dark"] .grade-feedback { background: #064e3b; border-color: #059669; color: #a7f3d0; }
         .score-display { font-weight: bold; color: var(--success); font-size: 1.2rem; }
 
+        /* Assignment List Card */
+        .assignment-card {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--card-bg); padding: 20px; margin-bottom: 15px;
+            border: 1px solid var(--border-color); border-radius: 8px;
+            transition: transform 0.2s;
+        }
+        .assignment-card:hover { transform: translateX(5px); border-color: var(--primary-color); }
+        .assign-info h4 { color: var(--text-dark); margin-bottom: 5px; }
+        .assign-info p { color: var(--text-light); font-size: 0.9rem; margin: 0; }
+
         /* Quiz Bank Item */
         .quiz-bank-item { border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; background: var(--card-bg); display: flex; justify-content: space-between; align-items: flex-start; transition: border-color 0.2s;}
         .quiz-bank-item:hover { border-color: var(--primary-color); }
@@ -291,7 +302,7 @@
     <section id="auth-screen">
         <div class="auth-card">
             <h1 class="logo-text">Electro Mind</h1>
-            <p style="margin-bottom: 20px; color: var(--text-light);">HUST Electrical Engineering - NBP</p>
+            <p style="margin-bottom: 20px; color: var(--text-light);">HUST Electrical Engineering</p>
             
             <div class="role-switch">
                 <button class="role-btn active" onclick="switchAuthRole('student')">Sinh viên</button>
@@ -450,11 +461,37 @@
                         </form>
                     </div>
 
-                    <h3 style="margin: 30px 0 15px; color: var(--warning);"><i class="fa-solid fa-hourglass-half"></i> Bài cần chấm (Pending)</h3>
-                    <div id="teacher-pending-list"></div>
+                    <h3 style="margin: 30px 0 15px; color: var(--warning);"><i class="fa-solid fa-hourglass-half"></i> Overview (Việc cần làm)</h3>
+                    <div id="teacher-pending-list" style="margin-bottom: 30px;"></div>
 
-                    <h3 style="margin: 30px 0 15px; color: var(--success);"><i class="fa-solid fa-check-double"></i> Lịch sử chấm điểm (Graded)</h3>
-                    <div id="teacher-graded-list"></div>
+                    <!-- NEW: ASSIGNMENT LIST -->
+                    <h3 style="margin: 30px 0 15px; color: var(--primary-color);"><i class="fa-solid fa-folder-open"></i> Danh sách đề bài đã ra</h3>
+                    <div id="teacher-assignments-list">
+                        <!-- List of assignments injected here -->
+                    </div>
+                </div>
+
+                <!-- NEW: TEACHER ASSIGNMENT DETAIL VIEW -->
+                <div id="view-teacher-assignment-detail" class="view-section hidden">
+                    <button onclick="navigate('teacher-writing-manage')" class="btn btn-outline" style="margin-bottom: 20px;">&larr; Quay lại danh sách</button>
+                    <h2 id="wad-title" class="section-title">Assignment Title</h2>
+                    <div class="card">
+                        <p id="wad-desc" style="color: var(--text-light); margin-bottom: 20px; font-style: italic; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"></p>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                            <!-- Pending Column -->
+                            <div>
+                                <h4 style="color: var(--warning); margin-bottom: 15px;"><i class="fa-solid fa-clock"></i> Chờ chấm</h4>
+                                <div id="wad-pending-list"></div>
+                            </div>
+                            
+                            <!-- Graded Column -->
+                            <div>
+                                <h4 style="color: var(--success); margin-bottom: 15px;"><i class="fa-solid fa-check-circle"></i> Đã chấm</h4>
+                                <div id="wad-graded-list"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- TEACHER: GRADING INTERFACE -->
@@ -789,7 +826,7 @@
             else if (viewId === 'leaderboard') { show('view-leaderboard'); fetchLeaderboard(); }
             else if (viewId === 'teacher-create-lesson') { show('view-teacher-create-lesson'); }
             else if (viewId === 'student-writing') { show('view-student-writing'); fetchStudentWriting(); }
-            else if (viewId === 'teacher-writing-manage') { show('view-teacher-writing-manage'); fetchTeacherWritingDashboard(); }
+            else if (viewId === 'teacher-writing-manage') { show('view-teacher-writing-manage'); fetchTeacherWritingDashboard(); fetchTeacherAssignments(); }
             else if (viewId === 'view-lesson-detail') { show('view-lesson-detail'); }
             
             const activeMenu = document.querySelector(`.menu-item[onclick="navigate('${viewId}')"]`);
@@ -837,10 +874,8 @@
 
         window.handleLogout = () => signOut(auth).then(() => location.reload());
 
-        // --- WRITING MODULE (Truncated for brevity, assumed unchanged) ---
-        // ... (Submit, Fetch, Grade functions from previous version) ...
-        // For full functionality, please ensure the previous Writing Logic is here. 
-        // I will include the necessary listener for creating writing assignment.
+        // --- WRITING MODULE ---
+        
         get('create-writing-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (currentRole !== 'teacher') return;
@@ -854,34 +889,170 @@
                 });
                 showToast("Đã giao bài tập mới!");
                 get('create-writing-form').reset();
+                fetchTeacherAssignments(); // Refresh list
             } catch (err) { showToast("Lỗi: " + err.message); }
             toggleLoading(false);
         });
-        // Placeholder for fetching writing (needed for navigation)
-        window.fetchTeacherWritingDashboard = async () => { 
-            /* ... Previous logic ... */ 
-            // Re-implementing briefly for robustness
+
+        // 1. Fetch Overview (Pending Submissions)
+        window.fetchTeacherWritingDashboard = async () => {
             toggleLoading(true);
             const pendingContainer = get('teacher-pending-list');
-            const gradedContainer = get('teacher-graded-list');
-            pendingContainer.innerHTML = ''; gradedContainer.innerHTML = '';
+            pendingContainer.innerHTML = ''; 
             try {
                 const qPending = query(collection(db, PUBLIC_DATA_PATH, "writing_submissions"), where("status", "==", "pending"));
                 const snapPending = await getDocs(qPending);
-                if(snapPending.empty) pendingContainer.innerHTML = '<p class="text-light">Không có bài.</p>';
+                if(snapPending.empty) pendingContainer.innerHTML = '<p class="text-light">Không có bài chờ chấm gấp.</p>';
                 snapPending.forEach(doc => {
                     const d = doc.data();
-                    pendingContainer.innerHTML += `<div class="writing-item" style="border-left:4px solid var(--warning)">
-                        <div class="writing-header"><div class="writing-title">${d.assignmentTitle}</div><span class="badge badge-pending">Pending</span></div>
-                        <div class="writing-meta">${d.studentEmail}</div>
+                    pendingContainer.innerHTML += `
+                    <div class="writing-item" style="border-left:4px solid var(--warning)">
+                        <div class="writing-header"><div class="writing-title">${d.assignmentTitle || 'Bài tập'}</div><span class="badge badge-pending">Pending</span></div>
+                        <div class="writing-meta">${d.studentEmail} - ${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleString() : ''}</div>
                         <button class="btn btn-primary btn-sm" onclick="openGrading('${doc.id}')">Chấm bài</button>
                     </div>`;
                 });
-            } catch(e){}
+            } catch(e){ console.error(e); }
             toggleLoading(false);
         };
-        window.fetchStudentWriting = async () => { /* ... Previous Logic ... */ };
-        window.openGrading = async (id) => { /* ... */ }; // Placeholder
+
+        // 2. NEW: Fetch Assignments List
+        window.fetchTeacherAssignments = async () => {
+            const container = get('teacher-assignments-list');
+            container.innerHTML = '';
+            try {
+                const q = query(collection(db, PUBLIC_DATA_PATH, "writing_assignments"), orderBy("createdAt", "desc"));
+                const snap = await getDocs(q);
+                if(snap.empty) {
+                    container.innerHTML = '<p class="text-light">Chưa có đề bài nào.</p>';
+                } else {
+                    snap.forEach(doc => {
+                        const d = doc.data();
+                        const div = document.createElement('div');
+                        div.className = 'assignment-card';
+                        div.innerHTML = `
+                            <div class="assign-info">
+                                <h4>${d.title}</h4>
+                                <p>${d.description.substring(0, 60)}${d.description.length>60?'...':''}</p>
+                                <p style="font-size:0.8rem; margin-top:5px;">Ngày tạo: ${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="openAssignmentDetail('${doc.id}')">Xem chi tiết &rarr;</button>
+                        `;
+                        container.appendChild(div);
+                    });
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        // 3. NEW: Open Assignment Detail (Submissions)
+        window.openAssignmentDetail = async (assignmentId) => {
+            toggleLoading(true);
+            try {
+                // Get Assignment Details
+                const aDoc = await getDoc(doc(db, PUBLIC_DATA_PATH, "writing_assignments", assignmentId));
+                if(!aDoc.exists()) return showToast("Không tìm thấy đề bài");
+                const aData = aDoc.data();
+
+                hide('view-teacher-writing-manage');
+                show('view-teacher-assignment-detail');
+                get('wad-title').textContent = aData.title;
+                get('wad-desc').textContent = aData.description;
+
+                const pendingContainer = get('wad-pending-list');
+                const gradedContainer = get('wad-graded-list');
+                pendingContainer.innerHTML = ''; gradedContainer.innerHTML = '';
+
+                // Fetch Submissions for this Assignment
+                const qSubs = query(collection(db, PUBLIC_DATA_PATH, "writing_submissions"), where("assignmentId", "==", assignmentId));
+                const snapSubs = await getDocs(qSubs);
+
+                if(snapSubs.empty) {
+                    pendingContainer.innerHTML = '<p class="text-light">Chưa có bài nộp nào.</p>';
+                } else {
+                    snapSubs.forEach(doc => {
+                        const d = doc.data();
+                        const itemHtml = `
+                            <div class="writing-item" style="border-left: 4px solid ${d.status === 'graded' ? 'var(--success)' : 'var(--warning)'}">
+                                <div class="writing-meta" style="font-weight:bold;">${d.studentEmail}</div>
+                                <div class="writing-meta">Nộp: ${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleString() : 'N/A'}</div>
+                                ${d.status === 'graded' ? `<div class="score-display">${d.score}/100</div>` : ''}
+                                <button class="btn btn-sm ${d.status === 'graded' ? 'btn-outline' : 'btn-primary'}" style="margin-top:5px;" onclick="openGrading('${doc.id}')">
+                                    ${d.status === 'graded' ? 'Sửa điểm' : 'Chấm bài'}
+                                </button>
+                            </div>
+                        `;
+                        
+                        if (d.status === 'pending') pendingContainer.innerHTML += itemHtml;
+                        else gradedContainer.innerHTML += itemHtml;
+                    });
+                }
+                
+                if(pendingContainer.innerHTML === '') pendingContainer.innerHTML = '<p class="text-light">Không có bài chờ chấm.</p>';
+                if(gradedContainer.innerHTML === '') gradedContainer.innerHTML = '<p class="text-light">Chưa có bài đã chấm.</p>';
+
+            } catch(e) { console.error(e); showToast("Lỗi tải chi tiết"); }
+            toggleLoading(false);
+        }
+
+        window.fetchStudentWriting = async () => { /* ... Logic unchanged ... */ };
+
+        window.openGrading = async (submissionId) => {
+            toggleLoading(true);
+            try {
+                const docSnap = await getDoc(doc(db, PUBLIC_DATA_PATH, "writing_submissions", submissionId));
+                if(docSnap.exists()) {
+                    const data = docSnap.data();
+                    // Hide potentially active views
+                    hide('view-teacher-writing-manage');
+                    hide('view-teacher-assignment-detail');
+                    
+                    show('view-teacher-grading-detail');
+                    
+                    get('grade-assignment-title').textContent = data.assignmentTitle;
+                    get('grade-student-email').textContent = data.studentEmail;
+                    get('grade-student-content').textContent = data.content;
+                    
+                    if (data.imageUrl) {
+                        get('grade-student-image-container').style.display = 'block';
+                        get('grade-student-image').src = data.imageUrl;
+                    } else {
+                        get('grade-student-image-container').style.display = 'none';
+                    }
+
+                    if (data.status === 'graded') {
+                        get('grade-score').value = data.score;
+                        get('grade-feedback').value = data.feedback;
+                    } else {
+                         get('grading-form').reset();
+                    }
+
+                    get('grade-submission-id').value = submissionId;
+                }
+            } catch(e) { showToast("Lỗi mở bài làm"); }
+            toggleLoading(false);
+        }
+
+        get('grading-form').addEventListener('submit', async(e) => {
+            e.preventDefault();
+            toggleLoading(true);
+            const subId = get('grade-submission-id').value;
+            if (!subId) { showToast("Lỗi: Không tìm thấy ID bài làm"); toggleLoading(false); return; }
+            
+            const score = parseInt(get('grade-score').value);
+            const feedback = get('grade-feedback').value;
+            try {
+                await updateDoc(doc(db, PUBLIC_DATA_PATH, "writing_submissions", subId), {
+                    score: score,
+                    feedback: feedback,
+                    status: 'graded',
+                    gradedAt: new Date()
+                });
+                showToast("Đã chấm điểm xong!");
+                // Go back to Manage view main screen
+                navigate('teacher-writing-manage');
+            } catch(e) { showToast("Lỗi lưu điểm: " + e.message); }
+            toggleLoading(false);
+        });
 
         // ---------------- LESSON LOGIC (CORE UPDATES) ----------------
 

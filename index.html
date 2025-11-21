@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electro Mind - Electrical Engineering Learning - 1.1.4 </title>
+    <title>Electro Mind - Electrical Engineering Learning - 1.1.5 </title>
     
     <!-- Font chữ Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -560,7 +560,10 @@
 
                 <!-- LEADERBOARD -->
                 <div id="view-leaderboard" class="view-section hidden">
-                    <h2 class="section-title">Bảng vàng thành tích (Quiz + Writing)</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 class="section-title" style="margin-bottom:0">Bảng vàng thành tích</h2>
+                        <button id="btn-reset-leaderboard" class="btn btn-danger hidden" onclick="resetLeaderboard()"><i class="fa-solid fa-rotate-right"></i> Reset điểm Game</button>
+                    </div>
                     <div class="card">
                         <table class="leaderboard-table">
                             <thead>
@@ -1671,7 +1674,25 @@
                     let cls = r===1?'rank-1':r===2?'rank-2':r===3?'rank-3':'';
                     tbody.innerHTML+=`<tr><td class="${cls}">#${r++}</td><td>${item.email.split('@')[0]}</td><td style="font-weight:bold">${item.totalScore}</td></tr>`;
                 });
-            } catch(e){ console.error(e); }
+            } catch(e){ console.error(e); showToast("Lỗi tải bảng xếp hạng"); }
+            toggleLoading(false);
+        }
+        
+        // New Reset Leaderboard Function
+        window.resetLeaderboard = async () => {
+            if(!confirm("CẢNH BÁO: Hành động này sẽ xóa toàn bộ lịch sử điểm số của Mini Game (Quiz). Điểm bài tập Viết sẽ được giữ nguyên. Bạn có chắc chắn?")) return;
+            toggleLoading(true);
+            try {
+                const q = query(collection(db, PUBLIC_DATA_PATH, "scores"));
+                const snapshot = await getDocs(q);
+                const deletePromises = [];
+                snapshot.forEach((doc) => {
+                    deletePromises.push(deleteDoc(doc.ref));
+                });
+                await Promise.all(deletePromises);
+                showToast("Đã reset bảng xếp hạng Game!");
+                fetchLeaderboard();
+            } catch(e) { showToast("Lỗi xóa dữ liệu: " + e.message); }
             toggleLoading(false);
         }
     </script>

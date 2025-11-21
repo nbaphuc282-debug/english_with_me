@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electro Mind - Electrical Engineering Learning - 1.1.7 </title>
+    <title>Electro Mind - Electrical Engineering Learning - 1.1.8 </title>
     
     <!-- Font chữ Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -1674,11 +1674,35 @@
             }
 
             try {
+                // 1. Fetch valid assignments to filter scores
+                const assignmentsSnap = await getDocs(collection(db, PUBLIC_DATA_PATH, "writing_assignments"));
+                const validAssignmentIds = new Set();
+                assignmentsSnap.forEach(doc => validAssignmentIds.add(doc.id));
+
                 const quizSnap = await getDocs(collection(db, PUBLIC_DATA_PATH, "scores"));
                 const writingSnap = await getDocs(query(collection(db, PUBLIC_DATA_PATH, "writing_submissions"), where("status", "==", "graded")));
+                
                 const scoreMap = {};
-                quizSnap.forEach(doc => { const d = doc.data(); const email = d.email; if(!scoreMap[email]) scoreMap[email] = 0; scoreMap[email] += d.score; });
-                writingSnap.forEach(doc => { const d = doc.data(); const email = d.studentEmail; if(!scoreMap[email]) scoreMap[email] = 0; scoreMap[email] += (d.score || 0); });
+                
+                // Quiz scores (keep existing logic)
+                quizSnap.forEach(doc => { 
+                    const d = doc.data(); 
+                    const email = d.email; 
+                    if(!scoreMap[email]) scoreMap[email] = 0; 
+                    scoreMap[email] += d.score; 
+                });
+                
+                // Writing scores (Filter by valid assignment IDs)
+                writingSnap.forEach(doc => { 
+                    const d = doc.data(); 
+                    // ONLY count if assignment still exists
+                    if (validAssignmentIds.has(d.assignmentId)) {
+                        const email = d.studentEmail; 
+                        if(!scoreMap[email]) scoreMap[email] = 0; 
+                        scoreMap[email] += (d.score || 0); 
+                    }
+                });
+
                 const leaderboard = Object.keys(scoreMap).map(email => ({ email: email, totalScore: scoreMap[email] })).sort((a, b) => b.totalScore - a.totalScore).slice(0, 10);
                 let r=1; 
                 leaderboard.forEach(item => {
